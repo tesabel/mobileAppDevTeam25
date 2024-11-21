@@ -10,6 +10,7 @@ import com.example.doordonot.ui.CalendarPage
 import com.example.doordonot.ui.HabitManagementPage
 import com.example.doordonot.ui.LoginPage
 import com.example.doordonot.ui.MakeHabitPage
+import com.example.doordonot.ui.SignUpPage
 import com.example.doordonot.viewmodel.HabitViewModel
 
 @Composable
@@ -21,5 +22,7 @@ fun NavGraph(navController: NavHostController = rememberNavController()) {
         composable("calendar") { CalendarPage(navController, viewModel) }
         composable("habit_management") { HabitManagementPage(navController, viewModel) }
         composable("make_habit") { MakeHabitPage(navController, viewModel) }
+        composable("login") { LoginPage(navController, viewModel) }
+        composable("signup") { SignUpPage(navController) }
     }
 }
