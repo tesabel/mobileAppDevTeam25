@@ -1,21 +1,21 @@
 {
   "project_info": {
-    "project_number": "1053401549264",
-    "project_id": "fifthapp-17553",
-    "storage_bucket": "fifthapp-17553.firebasestorage.app"
+    "project_number": "1065822460520",
+    "project_id": "doordonot-56ef1",
+    "storage_bucket": "doordonot-56ef1.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:1053401549264:android:f81ea966942df03f2b11d5",
+        "mobilesdk_app_id": "1:1065822460520:android:ec3197e39c3575d9e7f9dd",
         "android_client_info": {
-          "package_name": "com.example.fifhtapp"
+          "package_name": "com.example.doordonot"
         }
       },
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyDkLd5c1bTPe7U7s_683OfG-wDYn7x4tj4"
+          "current_key": "AIzaSyAELbrnqEonrcgROR758KPDeSbkNocunNY"
         }
       ],
       "services": {

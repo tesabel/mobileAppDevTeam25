@@ -1,3 +1,5 @@
+// SignUpPage.kt
+
 package com.example.doordonot.ui
 
 import androidx.compose.foundation.layout.*
@@ -6,13 +8,13 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.*
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.graphics.Color
 import androidx.navigation.NavController
 import com.example.doordonot.ui.components.TopBar
+import com.google.firebase.auth.FirebaseAuth
 
 @Composable
 fun SignUpPage(navController: NavController) {
@@ -21,8 +23,10 @@ fun SignUpPage(navController: NavController) {
     ) { padding ->
         var email by remember { mutableStateOf("") }
         var password by remember { mutableStateOf("") }
-        var confirmPassword by remember { mutableStateOf("") } // 비밀번호 확인 필드
+        var confirmPassword by remember { mutableStateOf("") }
         var errorMessage by remember { mutableStateOf("") }
+
+        val auth = FirebaseAuth.getInstance()
 
         Column(
             modifier = Modifier
@@ -43,7 +47,7 @@ fun SignUpPage(navController: NavController) {
             )
             Spacer(modifier = Modifier.height(8.dp))
 
-            // 비밀번호 입력 필드 (입력 내용 숨김)
+            // 비밀번호 입력 필드
             TextField(
                 value = password,
                 onValueChange = { password = it },
@@ -56,7 +60,7 @@ fun SignUpPage(navController: NavController) {
             )
             Spacer(modifier = Modifier.height(8.dp))
 
-            // 비밀번호 확인 입력 필드 (입력 내용 숨김)
+            // 비밀번호 확인 입력 필드
             TextField(
                 value = confirmPassword,
                 onValueChange = { confirmPassword = it },
@@ -94,9 +98,16 @@ fun SignUpPage(navController: NavController) {
                             errorMessage = "비밀번호가 일치하지 않습니다."
                         }
                         else -> {
-                            errorMessage = ""
-                            // 회원가입 성공 후 로그인 페이지로 이동
-                            navController.navigate("login")
+                            auth.createUserWithEmailAndPassword(email, password)
+                                .addOnCompleteListener { task ->
+                                    if (task.isSuccessful) {
+                                        errorMessage = ""
+                                        // 회원가입 성공 후 로그인 페이지로 이동
+                                        navController.navigate("login")
+                                    } else {
+                                        errorMessage = "회원가입에 실패했습니다: ${task.exception?.message}"
+                                    }
+                                }
                         }
                     }
                 },

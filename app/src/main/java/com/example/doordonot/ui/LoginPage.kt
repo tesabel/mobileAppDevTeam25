@@ -10,18 +10,22 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.navigation.NavController
 import com.example.doordonot.ui.components.TopBar
 import com.example.doordonot.viewmodel.HabitViewModel
+import com.google.firebase.auth.FirebaseAuth
 
 @Composable
-fun LoginPage(navController: NavController, viewModel: HabitViewModel) {
+fun LoginPage(navController: NavController) {
     Scaffold(
         topBar = { TopBar(title = "로그인") }
     ) { padding ->
-        var username by remember { mutableStateOf("") }
+        var email by remember { mutableStateOf("") }
         var password by remember { mutableStateOf("") }
         var errorMessage by remember { mutableStateOf("") }
+
+        val auth = FirebaseAuth.getInstance()
 
         Column(
             modifier = Modifier
@@ -31,12 +35,12 @@ fun LoginPage(navController: NavController, viewModel: HabitViewModel) {
             verticalArrangement = Arrangement.Center
         ) {
             TextField(
-                value = username,
-                onValueChange = { username = it },
-                label = { Text("아이디") },
+                value = email,
+                onValueChange = { email = it },
+                label = { Text("이메일") },
                 modifier = Modifier.fillMaxWidth(),
                 keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Text
+                    keyboardType = KeyboardType.Email
                 )
             )
             Spacer(modifier = Modifier.height(8.dp))
@@ -47,7 +51,8 @@ fun LoginPage(navController: NavController, viewModel: HabitViewModel) {
                 modifier = Modifier.fillMaxWidth(),
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Password
-                )
+                ),
+                visualTransformation = PasswordVisualTransformation()
             )
             Spacer(modifier = Modifier.height(8.dp))
 
@@ -63,13 +68,18 @@ fun LoginPage(navController: NavController, viewModel: HabitViewModel) {
 
             Button(
                 onClick = {
-                    if (username.isBlank() || password.isBlank()) {
-                        errorMessage = "아이디와 비밀번호를 모두 입력해주세요."
-                    } else if (!isValidCredentials(username, password)) {
-                        errorMessage = "유효하지 않은 아이디 또는 비밀번호입니다."
+                    if (email.isBlank() || password.isBlank()) {
+                        errorMessage = "이메일과 비밀번호를 모두 입력해주세요."
                     } else {
-                        errorMessage = ""
-                        navController.navigate("calendar")
+                        auth.signInWithEmailAndPassword(email, password)
+                            .addOnCompleteListener { task ->
+                                if (task.isSuccessful) {
+                                    errorMessage = ""
+                                    navController.navigate("calendar")
+                                } else {
+                                    errorMessage = "로그인에 실패했습니다: ${task.exception?.message}"
+                                }
+                            }
                     }
                 },
                 modifier = Modifier.fillMaxWidth()
@@ -88,8 +98,4 @@ fun LoginPage(navController: NavController, viewModel: HabitViewModel) {
             }
         }
     }
-}
-
-fun isValidCredentials(username: String, password: String): Boolean {
-    return username == "test" && password == "1234"
 }
