@@ -4,6 +4,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavController
@@ -29,6 +30,13 @@ fun BottomNavigationBar(navController: NavController) {
             label = { Text("습관 관리") },
             selected = false,
             onClick = { navController.navigate("habit_management") }
+        )
+        // 설정 탭 추가
+        NavigationBarItem(
+            icon = { Icon(Icons.Default.Settings, contentDescription = "설정") },
+            label = { Text("설정") },
+            selected = false,
+            onClick = { navController.navigate("settings") }
         )
     }
 }
