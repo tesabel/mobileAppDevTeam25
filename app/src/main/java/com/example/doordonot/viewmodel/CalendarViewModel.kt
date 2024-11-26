@@ -2,6 +2,7 @@ package com.example.doordonot.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.doordonot.ui.SelectedDate
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -28,8 +29,3 @@ class CalendarViewModel : ViewModel() {
     }
 }
 
-data class SelectedDate(
-    val year: Int,
-    val month: Int,
-    val day: Int
-)

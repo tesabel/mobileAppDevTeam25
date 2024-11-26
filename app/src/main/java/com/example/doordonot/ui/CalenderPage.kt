@@ -19,6 +19,8 @@ import com.example.doordonot.viewmodel.HabitViewModel
 import java.text.SimpleDateFormat
 import java.time.LocalDate
 import java.util.Locale
+import com.example.doordonot.ui.SelectedDate
+import com.example.doordonot.ui.Habit
 
 @Composable
 fun CalendarPage(viewModel: HabitViewModel,
@@ -30,8 +32,8 @@ fun CalendarPage(viewModel: HabitViewModel,
         bottomBar = { BottomNavigationBar(navController) }
     ) { innerPadding ->
         Column(modifier = Modifier.padding(innerPadding)) {
-            Calendar(navController = navController
-                ,viewModel = viewModel,viewmodel = viewmodel
+            Calendar(
+                viewModel = viewModel,viewmodel = viewmodel
             )
         }
     }
@@ -39,10 +41,12 @@ fun CalendarPage(viewModel: HabitViewModel,
 
 @Composable
 fun Calendar(
-    navController: NavController, viewModel: HabitViewModel, viewmodel: CalendarViewModel
+    viewModel: HabitViewModel, viewmodel: CalendarViewModel
 ) {
+
     val selectedDate by viewmodel.selectedDate.collectAsState()
     val habits by viewModel.habits.collectAsState()
+
 
     LazyColumn(modifier = Modifier.fillMaxSize()) {
         item {
@@ -58,15 +62,28 @@ fun Calendar(
                     viewmodel.onDateSelected(year, month + 1, day)
                 }
             }
-        }
+        } //선택된 날짜 표시
         item {
             Text(
                 text = "선택된 날짜: ${selectedDate.year}-${selectedDate.month}-${selectedDate.day}",
                 modifier = Modifier.padding(16.dp)
             )
+            Text(
+                text = "형성중인 습관",
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.padding(start = 16.dp, top = 8.dp)
+            )
+            Column { // 중첩 LazyColumn 제거
+                habits.filter { !it.isMaintained }.forEach { habit ->
+                    HabitItem(habit, viewModel, selectedDate.toLocalDate())
+                }
+            }
 
         }
+
     }
+
+}
 
 @Composable
 fun HabitItem(habit: Habit, viewModel: HabitViewModel, date: LocalDate) {
@@ -86,4 +103,4 @@ fun HabitItem(habit: Habit, viewModel: HabitViewModel, date: LocalDate) {
             }
         )
     }
-}}
+}
