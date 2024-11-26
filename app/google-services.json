@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1065822460520",
+    "project_id": "doordonot-56ef1",
+    "storage_bucket": "doordonot-56ef1.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1065822460520:android:ec3197e39c3575d9e7f9dd",
+        "android_client_info": {
+          "package_name": "com.example.doordonot"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAELbrnqEonrcgROR758KPDeSbkNocunNY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
