@@ -3,6 +3,9 @@ package com.example.doordonot.ui
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -10,10 +13,20 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.doordonot.ui.components.TopBar
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PrivacyPolicyPage(navController: NavController) {
     Scaffold(
-        topBar = { TopBar(title = "개인정보 처리방침") }
+        topBar = {
+            TopAppBar(
+                title = { Text("개인정보 처리방침") },
+                navigationIcon = {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "뒤로가기")
+                    }
+                }
+            )
+        }
     ) { padding ->
         Column(
             modifier = Modifier
