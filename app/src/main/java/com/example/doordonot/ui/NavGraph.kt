@@ -1,6 +1,9 @@
 // NavGraph.kt
 
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -21,7 +24,7 @@ import com.example.doordonot.viewmodel.HabitViewModel
 fun NavGraph(navController: NavHostController = rememberNavController()) {
     val viewModel: HabitViewModel = viewModel()
 
-    NavHost(navController = navController, startDestination = "login") {
+    NavHost(navController = navController, startDestination = "habit_management") {
         composable("login") { LoginPage(navController) }
         composable("signup") { SignUpPage(navController) }
         composable("calendar") { CalendarPage(navController, viewModel) }
