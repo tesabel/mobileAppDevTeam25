@@ -17,17 +17,19 @@ import com.example.doordonot.ui.PrivacyPolicyPage
 import com.example.doordonot.ui.SettingsPage
 import com.example.doordonot.ui.SignUpPage
 import com.example.doordonot.ui.TermsOfServicePage
+import com.example.doordonot.viewmodel.CalendarViewModel
 import com.example.doordonot.viewmodel.HabitViewModel
 
 
 @Composable
 fun NavGraph(navController: NavHostController = rememberNavController()) {
     val viewModel: HabitViewModel = viewModel()
+    val viewmodel: CalendarViewModel = viewModel()
 
     NavHost(navController = navController, startDestination = "login") {
         composable("login") { LoginPage(navController) }
         composable("signup") { SignUpPage(navController) }
-        composable("calendar") { CalendarPage(navController, viewModel) }
+        composable("calendar") { CalendarPage(viewModel,viewmodel,navController) }
         composable("habit_management") { HabitManagementPage(navController, viewModel) }
         composable("make_habit") { MakeHabitPage(navController, viewModel) }
         // 설정 페이지 추가
