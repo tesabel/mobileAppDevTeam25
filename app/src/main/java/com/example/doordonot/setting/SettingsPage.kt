@@ -1,7 +1,9 @@
-package com.example.doordonot.ui
+package com.example.doordonot.setting
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -10,7 +12,6 @@ import androidx.navigation.NavController
 import com.example.doordonot.ui.components.BottomNavigationBar
 import com.example.doordonot.ui.components.TopBar
 import com.google.firebase.auth.FirebaseAuth
-import kotlinx.coroutines.tasks.await
 
 @Composable
 fun SettingsPage(navController: NavController) {
@@ -20,7 +21,15 @@ fun SettingsPage(navController: NavController) {
 
     Scaffold(
         topBar = { TopBar(title = "설정") },
-        bottomBar = { BottomNavigationBar(navController) }
+        bottomBar = { BottomNavigationBar(navController) },
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = { navController.navigate("add_habit") },
+                containerColor = MaterialTheme.colorScheme.primary
+            ) {
+                Icon(Icons.Default.Add, contentDescription = "습관 추가")
+            }
+        }
     ) { padding ->
         Column(
             modifier = Modifier

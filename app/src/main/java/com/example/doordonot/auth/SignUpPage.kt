@@ -1,4 +1,4 @@
-package com.example.doordonot.ui
+package com.example.doordonot.auth
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
@@ -7,25 +7,25 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.doordonot.ui.components.TopBar
-import com.example.doordonot.viewmodel.AuthViewModel
 
 @Composable
-fun LoginPage(
+fun SignUpPage(
     navController: NavController,
     authViewModel: AuthViewModel = viewModel()
 ) {
     Scaffold(
-        topBar = { TopBar(title = "로그인") }
+        topBar = { TopBar(title = "회원가입") }
     ) { padding ->
+        val name by authViewModel.name.collectAsState()
         val email by authViewModel.email.collectAsState()
         val password by authViewModel.password.collectAsState()
+        val confirmPassword by authViewModel.confirmPassword.collectAsState()
         val errorMessage by authViewModel.errorMessage.collectAsState()
 
         Column(
@@ -35,6 +35,18 @@ fun LoginPage(
                 .padding(16.dp),
             verticalArrangement = Arrangement.Center
         ) {
+            // 이름 입력 필드
+            TextField(
+                value = name,
+                onValueChange = { authViewModel.onNameChange(it) },
+                label = { Text("이름") },
+                modifier = Modifier.fillMaxWidth(),
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Text
+                )
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+
             // 이메일 입력 필드
             TextField(
                 value = email,
@@ -51,7 +63,20 @@ fun LoginPage(
             TextField(
                 value = password,
                 onValueChange = { authViewModel.onPasswordChange(it) },
-                label = { Text("비밀번호") },
+                label = { Text("비밀번호 (8자 이상)") },
+                modifier = Modifier.fillMaxWidth(),
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Password
+                ),
+                visualTransformation = PasswordVisualTransformation()
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // 비밀번호 확인 입력 필드
+            TextField(
+                value = confirmPassword,
+                onValueChange = { authViewModel.onConfirmPasswordChange(it) },
+                label = { Text("비밀번호 확인") },
                 modifier = Modifier.fillMaxWidth(),
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Password
@@ -71,26 +96,28 @@ fun LoginPage(
                 Spacer(modifier = Modifier.height(8.dp))
             }
 
-            // 로그인 버튼
+            // 회원가입 버튼
             Button(
                 onClick = {
-                    authViewModel.login {
-                        navController.navigate("calendar") // 로그인 성공 시 캘린더 화면으로 이동
+                    authViewModel.signUp {
+                        navController.navigate("login") { // 회원가입 성공 시 로그인 화면으로 이동
+                            popUpTo("signup") { inclusive = true }
+                        }
                     }
                 },
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("로그인")
+                Text("회원가입")
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // 회원가입 페이지로 이동
+            // 로그인 페이지로 이동 버튼
             TextButton(
-                onClick = { navController.navigate("signup") },
+                onClick = { navController.navigate("login") },
                 modifier = Modifier.align(Alignment.CenterHorizontally)
             ) {
-                Text("회원가입")
+                Text("로그인 페이지로")
             }
         }
     }

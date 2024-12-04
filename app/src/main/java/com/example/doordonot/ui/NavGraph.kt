@@ -1,9 +1,6 @@
 // NavGraph.kt
 
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -11,12 +8,13 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.doordonot.ui.CalendarPage
 import com.example.doordonot.ui.HabitManagementPage
-import com.example.doordonot.ui.LoginPage
+import com.example.doordonot.auth.LoginPage
 import com.example.doordonot.ui.MakeHabitPage
-import com.example.doordonot.ui.PrivacyPolicyPage
-import com.example.doordonot.ui.SettingsPage
-import com.example.doordonot.ui.SignUpPage
-import com.example.doordonot.ui.TermsOfServicePage
+import com.example.doordonot.setting.PrivacyPolicyPage
+import com.example.doordonot.setting.SettingsPage
+import com.example.doordonot.auth.SignUpPage
+import com.example.doordonot.habit.AddHabitPage
+import com.example.doordonot.setting.TermsOfServicePage
 import com.example.doordonot.viewmodel.CalendarViewModel
 import com.example.doordonot.viewmodel.HabitViewModel
 
@@ -38,5 +36,7 @@ fun NavGraph(navController: NavHostController = rememberNavController()) {
         composable("terms_of_service") { TermsOfServicePage(navController) }
         // 개인정보 처리방침 페이지 추가
         composable("privacy_policy") { PrivacyPolicyPage(navController) }
+        composable("add_habit") { AddHabitPage(navController) }
+
     }
 }

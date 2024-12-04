@@ -1,4 +1,4 @@
-package com.example.doordonot.ui
+package com.example.doordonot.auth
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
@@ -13,19 +13,17 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.doordonot.ui.components.TopBar
-import com.example.doordonot.viewmodel.AuthViewModel
 
 @Composable
-fun SignUpPage(
+fun LoginPage(
     navController: NavController,
     authViewModel: AuthViewModel = viewModel()
 ) {
     Scaffold(
-        topBar = { TopBar(title = "회원가입") }
+        topBar = { TopBar(title = "로그인") }
     ) { padding ->
         val email by authViewModel.email.collectAsState()
         val password by authViewModel.password.collectAsState()
-        val confirmPassword by authViewModel.confirmPassword.collectAsState()
         val errorMessage by authViewModel.errorMessage.collectAsState()
 
         Column(
@@ -51,20 +49,7 @@ fun SignUpPage(
             TextField(
                 value = password,
                 onValueChange = { authViewModel.onPasswordChange(it) },
-                label = { Text("비밀번호 (8자 이상)") },
-                modifier = Modifier.fillMaxWidth(),
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Password
-                ),
-                visualTransformation = PasswordVisualTransformation()
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // 비밀번호 확인 입력 필드
-            TextField(
-                value = confirmPassword,
-                onValueChange = { authViewModel.onConfirmPasswordChange(it) },
-                label = { Text("비밀번호 확인") },
+                label = { Text("비밀번호") },
                 modifier = Modifier.fillMaxWidth(),
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Password
@@ -84,26 +69,28 @@ fun SignUpPage(
                 Spacer(modifier = Modifier.height(8.dp))
             }
 
-            // 회원가입 버튼
+            // 로그인 버튼
             Button(
                 onClick = {
-                    authViewModel.signUp {
-                        navController.navigate("login") // 회원가입 성공 시 로그인 화면으로 이동
+                    authViewModel.login {
+                        navController.navigate("calendar") { // 로그인 성공 시 캘린더 화면으로 이동
+                            popUpTo("login") { inclusive = true }
+                        }
                     }
                 },
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("회원가입")
+                Text("로그인")
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // 로그인 페이지로 이동 버튼
+            // 회원가입 페이지로 이동
             TextButton(
-                onClick = { navController.navigate("login") },
+                onClick = { navController.navigate("signup") },
                 modifier = Modifier.align(Alignment.CenterHorizontally)
             ) {
-                Text("로그인 페이지로")
+                Text("회원가입")
             }
         }
     }
