@@ -16,6 +16,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.doordonot.ui.components.TopBar
 import com.example.doordonot.auth.AuthViewModel
 import com.example.doordonot.model.Habit
+import com.example.doordonot.viewmodel.HabitViewModel
 
 @Composable
 fun HabitListScreen(

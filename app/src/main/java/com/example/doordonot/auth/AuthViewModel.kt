@@ -31,6 +31,10 @@ class AuthViewModel(
     private val _currentUser = MutableStateFlow<User?>(null)
     val currentUser: StateFlow<User?> = _currentUser
 
+    init {
+        loadCurrentUser()
+    }
+
     // 이름 입력 업데이트
     fun onNameChange(newName: String) {
         _name.value = newName

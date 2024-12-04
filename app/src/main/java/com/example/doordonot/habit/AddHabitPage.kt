@@ -1,5 +1,6 @@
 package com.example.doordonot.habit
 
+import android.util.Log
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -7,20 +8,21 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.doordonot.ui.components.TopBar
+import com.example.doordonot.auth.AuthViewModel
 import com.example.doordonot.model.Habit
 import com.example.doordonot.model.HabitType
-import com.example.doordonot.auth.AuthViewModel
+import com.example.doordonot.ui.components.TopBar
+import com.example.doordonot.viewmodel.HabitViewModel
 
 @Composable
 fun AddHabitPage(
     navController: NavController,
-    habitViewModel: HabitViewModel = viewModel(),
-    authViewModel: AuthViewModel = viewModel()
+    habitViewModel: HabitViewModel,
+    authViewModel: AuthViewModel
 ) {
     val user by authViewModel.currentUser.collectAsState()
 
+    // user가 null이 아닐 때만 UI를 표시
     user?.let { currentUser ->
         var habitName by remember { mutableStateOf("") }
         var habitCategory by remember { mutableStateOf("") }
@@ -34,7 +36,8 @@ fun AddHabitPage(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding)
-                    .padding(16.dp)
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.Center
             ) {
                 // 습관 이름 입력 필드
                 TextField(
@@ -96,7 +99,10 @@ fun AddHabitPage(
                                 streak = if (habitType == HabitType.MAINTAIN) 1 else 0 // 유지 중인 습관은 기본적으로 1
                             )
                             habitViewModel.addHabit(habit, currentUser.uid) {
-                                navController.popBackStack()
+                                Log.d("AddHabitPage", "Habit added successfully, navigating to habit_management")
+                                navController.navigate("habit_management") {
+                                    popUpTo("add_habit") { inclusive = true }
+                                }
                             }
                         }
                     },
@@ -108,7 +114,7 @@ fun AddHabitPage(
         }
     }
 
-    // 사용자 정보가 없는 경우 로그인 페이지로 이동
+    // user가 null인 경우 로그인 페이지로 이동
     if (user == null) {
         LaunchedEffect(Unit) {
             navController.navigate("login") {

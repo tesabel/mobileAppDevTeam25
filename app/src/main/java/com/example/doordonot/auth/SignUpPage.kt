@@ -17,7 +17,7 @@ import com.example.doordonot.ui.components.TopBar
 @Composable
 fun SignUpPage(
     navController: NavController,
-    authViewModel: AuthViewModel = viewModel()
+    authViewModel: AuthViewModel
 ) {
     Scaffold(
         topBar = { TopBar(title = "회원가입") }

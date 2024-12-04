@@ -11,10 +11,16 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.doordonot.ui.components.BottomNavigationBar
 import com.example.doordonot.ui.components.TopBar
+import com.example.doordonot.auth.AuthViewModel
+import com.example.doordonot.viewmodel.HabitViewModel
 import com.google.firebase.auth.FirebaseAuth
 
 @Composable
-fun SettingsPage(navController: NavController) {
+fun SettingsPage(
+    navController: NavController,
+    authViewModel: AuthViewModel,
+    habitViewModel: HabitViewModel
+) {
     val auth = FirebaseAuth.getInstance()
     var showLogoutDialog by remember { mutableStateOf(false) }
     var showDeleteAccountDialog by remember { mutableStateOf(false) }
@@ -126,6 +132,7 @@ fun SettingsPage(navController: NavController) {
                                     }
                                 } else {
                                     // 오류 처리
+                                    // 예: 에러 메시지 표시
                                 }
                             }
                             showDeleteAccountDialog = false

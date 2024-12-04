@@ -1,4 +1,4 @@
-package com.example.doordonot.habit
+package com.example.doordonot.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

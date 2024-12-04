@@ -8,11 +8,14 @@ class HabitRepository {
 
     // 습관 추가
     fun addHabit(habit: Habit, userId: String, onComplete: (Boolean) -> Unit) {
-        db.collection("users")
+        val habitRef = db.collection("users")
             .document(userId)
             .collection("habits")
-            .document(habit.id)
-            .set(habit)
+            .document() // 고유한 문서 ID 자동 생성
+
+        val habitWithId = habit.copy(id = habitRef.id) // 생성된 ID를 Habit 객체에 설정
+
+        habitRef.set(habitWithId)
             .addOnSuccessListener { onComplete(true) }
             .addOnFailureListener { onComplete(false) }
     }
