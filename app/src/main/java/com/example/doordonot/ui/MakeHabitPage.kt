@@ -11,11 +11,16 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.navigation.NavController
+import com.example.doordonot.auth.AuthViewModel
 import com.example.doordonot.ui.components.TopBar
 import com.example.doordonot.viewmodel.HabitViewModel
 
 @Composable
-fun MakeHabitPage(navController: NavController, viewModel: HabitViewModel = HabitViewModel()) {
+fun MakeHabitPage(
+    navController: NavController,
+    viewModel: HabitViewModel = HabitViewModel(),
+    authViewModel: AuthViewModel
+) {
     Scaffold(
         topBar = { TopBar(title = "습관 추가") }
     ) { padding ->
@@ -152,21 +157,21 @@ fun MakeHabitPage(navController: NavController, viewModel: HabitViewModel = Habi
             Spacer(modifier = Modifier.height(16.dp))
 
             // 저장 버튼
-            Button(
-                onClick = {
-                    val habit = Habit(
-                        name = habitName,
-                        categories = selectedCategories.toList(),
-                        isMaintained = selectedHabitType == "유지중인 습관",
-                        transitionDays = transitionDays.toIntOrNull() ?: 0
-                    )
-                    viewModel.addHabit(habit)
-                    navController.navigate("habit_management")
-                },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("습관 추가")
-            }
+//            Button(
+//                onClick = {
+//                    val habit = Habit(
+//                        name = habitName,
+//                        categories = selectedCategories.toList(),
+//                        isMaintained = selectedHabitType == "유지중인 습관",
+//                        transitionDays = transitionDays.toIntOrNull() ?: 0
+//                    )
+//                    viewModel.addHabit(habit)
+//                    navController.navigate("habit_management")
+//                },
+//                modifier = Modifier.fillMaxWidth()
+//            ) {
+//                Text("습관 추가")
+//            }
         }
     }
 }

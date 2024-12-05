@@ -33,13 +33,17 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.example.doordonot.auth.AuthViewModel
 import com.example.doordonot.ui.components.BottomNavigationBar
 import com.example.doordonot.ui.components.TopBar
 import com.example.doordonot.viewmodel.HabitViewModel
-import java.time.LocalDate
 
 @Composable
-fun HabitManagementPage(navController: NavController, viewModel: HabitViewModel = viewModel()) {
+fun HabitManagementPage(
+    navController: NavController,
+    viewModel: HabitViewModel = viewModel(),
+    authViewModel: AuthViewModel
+) {
     Scaffold(
         topBar = { TopBar(title = "습관 관리") },
         bottomBar = { BottomNavigationBar(navController) },
