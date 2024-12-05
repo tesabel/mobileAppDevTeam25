@@ -3,15 +3,18 @@ package com.example.doordonot.setting
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Logout
+import androidx.compose.material.icons.filled.List
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.example.doordonot.auth.AuthViewModel
 import com.example.doordonot.ui.components.BottomNavigationBar
 import com.example.doordonot.ui.components.TopBar
-import com.example.doordonot.auth.AuthViewModel
 import com.example.doordonot.viewmodel.HabitViewModel
 import com.google.firebase.auth.FirebaseAuth
 
@@ -27,15 +30,7 @@ fun SettingsPage(
 
     Scaffold(
         topBar = { TopBar(title = "설정") },
-        bottomBar = { BottomNavigationBar(navController) },
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = { navController.navigate("add_habit") },
-                containerColor = MaterialTheme.colorScheme.primary
-            ) {
-                Icon(Icons.Default.Add, contentDescription = "습관 추가")
-            }
-        }
+        bottomBar = { BottomNavigationBar(navController) }
     ) { padding ->
         Column(
             modifier = Modifier
@@ -43,47 +38,40 @@ fun SettingsPage(
                 .padding(padding)
                 .padding(16.dp)
         ) {
-            // 로그아웃
-            Text(
+            // 기존 버튼들
+            SettingsButton(
                 text = "로그아웃",
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { showLogoutDialog = true }
-                    .padding(vertical = 16.dp)
+                icon = Icons.Default.Logout,
+                onClick = { showLogoutDialog = true }
             )
             Divider()
 
-            // 회원 탈퇴
-            Text(
+            SettingsButton(
                 text = "회원 탈퇴",
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { showDeleteAccountDialog = true }
-                    .padding(vertical = 16.dp)
+                icon = Icons.Default.Logout, // 적절한 아이콘으로 변경 가능
+                onClick = { showDeleteAccountDialog = true }
             )
             Divider()
 
-            // 이용약관
-            Text(
+            SettingsButton(
                 text = "이용약관",
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { navController.navigate("terms_of_service") }
-                    .padding(vertical = 16.dp)
+                icon = Icons.Default.List, // 적절한 아이콘으로 변경 가능
+                onClick = { navController.navigate("terms_of_service") }
             )
             Divider()
 
-            // 개인정보 처리방침
-            Text(
+            SettingsButton(
                 text = "개인정보 처리방침",
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { navController.navigate("privacy_policy") }
-                    .padding(vertical = 16.dp)
+                icon = Icons.Default.List, // 적절한 아이콘으로 변경 가능
+                onClick = { navController.navigate("privacy_policy") }
+            )
+            Divider()
+
+            // 새로운 습관 확인 버튼 추가
+            SettingsButton(
+                text = "습관 목록 확인",
+                icon = Icons.Default.List, // 적절한 아이콘으로 변경 가능
+                onClick = { navController.navigate("habit_list") }
             )
             Divider()
         }
@@ -131,8 +119,9 @@ fun SettingsPage(
                                         popUpTo("settings") { inclusive = true }
                                     }
                                 } else {
-                                    // 오류 처리
-                                    // 예: 에러 메시지 표시
+                                    // 오류 처리 (예: 에러 메시지 표시)
+                                    // 이를 위해 추가적인 상태 관리가 필요합니다.
+                                    // 예시로 Toast 메시지를 표시할 수 있습니다.
                                 }
                             }
                             showDeleteAccountDialog = false
@@ -148,5 +137,24 @@ fun SettingsPage(
                 }
             )
         }
+    }
+}
+
+@Composable
+fun SettingsButton(text: String, icon: ImageVector, onClick: () -> Unit) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(vertical = 16.dp)
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = text,
+            modifier = Modifier.size(24.dp)
+        )
+        Spacer(modifier = Modifier.width(16.dp))
+        Text(text = text, style = MaterialTheme.typography.titleMedium)
     }
 }
