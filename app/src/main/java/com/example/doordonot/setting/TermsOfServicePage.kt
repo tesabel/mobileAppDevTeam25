@@ -1,25 +1,23 @@
-package com.example.doordonot.ui
+package com.example.doordonot.setting
 
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.example.doordonot.ui.components.TopBar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PrivacyPolicyPage(navController: NavController) {
+fun TermsOfServicePage(navController: NavController) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("개인정보 처리방침") },
+                title = { Text("이용약관") },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "뒤로가기")
@@ -27,7 +25,7 @@ fun PrivacyPolicyPage(navController: NavController) {
                 }
             )
         }
-    ) { padding ->
+    )  { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -36,10 +34,10 @@ fun PrivacyPolicyPage(navController: NavController) {
                 .verticalScroll(rememberScrollState())
         ) {
             Text(
-                text = "개인정보 처리방침 내용 블라블라.",
+                text = "이용약관 내용 블라라ㅏㅏ",
                 style = MaterialTheme.typography.bodyLarge
             )
-            // 실제 개인정보 처리방침 내용을 여기에 작성
+            // 실제 이용약관 내용을 여기에 작성
         }
     }
 }

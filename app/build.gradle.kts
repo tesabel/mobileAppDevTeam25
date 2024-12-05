@@ -75,4 +75,6 @@ dependencies {
     implementation(libs.androidx.material.icons.extended)
     implementation(platform("com.google.firebase:firebase-bom:33.6.0"))
     implementation("com.google.firebase:firebase-analytics")
+    implementation ("com.google.firebase:firebase-firestore-ktx")       // Firestore SDK
+    implementation ("com.google.firebase:firebase-auth-ktx")           // Firebase 인증
 }

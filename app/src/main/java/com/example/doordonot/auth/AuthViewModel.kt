@@ -1,16 +1,21 @@
-package com.example.doordonot.viewmodel
+package com.example.doordonot.auth
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.firebase.auth.FirebaseAuth
+import com.example.doordonot.model.AuthRepository
+import com.example.doordonot.model.User
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
-class AuthViewModel : ViewModel() {
-    private val auth = FirebaseAuth.getInstance()
+class AuthViewModel(
+    private val authRepository: AuthRepository = AuthRepository()
+) : ViewModel() {
 
     // UI 상태를 관리하는 StateFlow
+    private val _name = MutableStateFlow("")
+    val name: StateFlow<String> = _name
+
     private val _email = MutableStateFlow("")
     val email: StateFlow<String> = _email
 
@@ -22,6 +27,18 @@ class AuthViewModel : ViewModel() {
 
     private val _errorMessage = MutableStateFlow("")
     val errorMessage: StateFlow<String> = _errorMessage
+
+    private val _currentUser = MutableStateFlow<User?>(null)
+    val currentUser: StateFlow<User?> = _currentUser
+
+    init {
+        loadCurrentUser()
+    }
+
+    // 이름 입력 업데이트
+    fun onNameChange(newName: String) {
+        _name.value = newName
+    }
 
     // 이메일 입력 업데이트
     fun onEmailChange(newEmail: String) {
@@ -42,6 +59,9 @@ class AuthViewModel : ViewModel() {
     fun signUp(onSuccess: () -> Unit) {
         viewModelScope.launch {
             when {
+                _name.value.isBlank() -> {
+                    _errorMessage.value = "이름을 입력해주세요."
+                }
                 !isValidEmail(_email.value) -> {
                     _errorMessage.value = "유효한 이메일 주소를 입력해주세요."
                 }
@@ -52,15 +72,15 @@ class AuthViewModel : ViewModel() {
                     _errorMessage.value = "비밀번호가 일치하지 않습니다."
                 }
                 else -> {
-                    auth.createUserWithEmailAndPassword(_email.value, _password.value)
-                        .addOnCompleteListener { task ->
-                            if (task.isSuccessful) {
-                                _errorMessage.value = ""
-                                onSuccess() // 회원가입 성공 시 콜백 호출
-                            } else {
-                                _errorMessage.value = "회원가입에 실패했습니다: ${task.exception?.message}"
-                            }
+                    authRepository.signUp(_name.value, _email.value, _password.value) { success ->
+                        if (success) {
+                            _errorMessage.value = ""
+                            loadCurrentUser()
+                            onSuccess() // 회원가입 성공 시 콜백 호출
+                        } else {
+                            _errorMessage.value = "회원가입에 실패했습니다."
                         }
+                    }
                 }
             }
         }
@@ -72,15 +92,24 @@ class AuthViewModel : ViewModel() {
             if (_email.value.isBlank() || _password.value.isBlank()) {
                 _errorMessage.value = "이메일과 비밀번호를 모두 입력해주세요."
             } else {
-                auth.signInWithEmailAndPassword(_email.value, _password.value)
-                    .addOnCompleteListener { task ->
-                        if (task.isSuccessful) {
-                            _errorMessage.value = ""
-                            onSuccess() // 로그인 성공 시 콜백 호출
-                        } else {
-                            _errorMessage.value = "로그인에 실패했습니다: ${task.exception?.message}"
-                        }
+                authRepository.signIn(_email.value, _password.value) { success ->
+                    if (success) {
+                        _errorMessage.value = ""
+                        loadCurrentUser()
+                        onSuccess() // 로그인 성공 시 콜백 호출
+                    } else {
+                        _errorMessage.value = "로그인에 실패했습니다."
                     }
+                }
+            }
+        }
+    }
+
+    // 현재 사용자 정보 로드
+    fun loadCurrentUser() {
+        viewModelScope.launch {
+            authRepository.getCurrentUser { user ->
+                _currentUser.value = user
             }
         }
     }
