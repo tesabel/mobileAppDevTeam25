@@ -11,21 +11,22 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.doordonot.ui.components.TopBar
-import com.example.doordonot.viewmodel.HabitViewModel
-import com.google.firebase.auth.FirebaseAuth
+import com.example.doordonot.viewmodel.AuthViewModel
 
 @Composable
-fun LoginPage(navController: NavController) {
+fun LoginPage(
+    navController: NavController,
+    authViewModel: AuthViewModel = viewModel()
+) {
     Scaffold(
         topBar = { TopBar(title = "로그인") }
     ) { padding ->
-        var email by remember { mutableStateOf("") }
-        var password by remember { mutableStateOf("") }
-        var errorMessage by remember { mutableStateOf("") }
-
-        val auth = FirebaseAuth.getInstance()
+        val email by authViewModel.email.collectAsState()
+        val password by authViewModel.password.collectAsState()
+        val errorMessage by authViewModel.errorMessage.collectAsState()
 
         Column(
             modifier = Modifier
@@ -34,9 +35,10 @@ fun LoginPage(navController: NavController) {
                 .padding(16.dp),
             verticalArrangement = Arrangement.Center
         ) {
+            // 이메일 입력 필드
             TextField(
                 value = email,
-                onValueChange = { email = it },
+                onValueChange = { authViewModel.onEmailChange(it) },
                 label = { Text("이메일") },
                 modifier = Modifier.fillMaxWidth(),
                 keyboardOptions = KeyboardOptions(
@@ -44,9 +46,11 @@ fun LoginPage(navController: NavController) {
                 )
             )
             Spacer(modifier = Modifier.height(8.dp))
+
+            // 비밀번호 입력 필드
             TextField(
                 value = password,
-                onValueChange = { password = it },
+                onValueChange = { authViewModel.onPasswordChange(it) },
                 label = { Text("비밀번호") },
                 modifier = Modifier.fillMaxWidth(),
                 keyboardOptions = KeyboardOptions(
@@ -56,30 +60,22 @@ fun LoginPage(navController: NavController) {
             )
             Spacer(modifier = Modifier.height(8.dp))
 
+            // 에러 메시지 표시
             if (errorMessage.isNotEmpty()) {
                 Text(
                     text = errorMessage,
-                    color = Color.Red,
+                    color = MaterialTheme.colorScheme.error,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth()
                 )
                 Spacer(modifier = Modifier.height(8.dp))
             }
 
+            // 로그인 버튼
             Button(
                 onClick = {
-                    if (email.isBlank() || password.isBlank()) {
-                        errorMessage = "이메일과 비밀번호를 모두 입력해주세요."
-                    } else {
-                        auth.signInWithEmailAndPassword(email, password)
-                            .addOnCompleteListener { task ->
-                                if (task.isSuccessful) {
-                                    errorMessage = ""
-                                    navController.navigate("calendar")
-                                } else {
-                                    errorMessage = "로그인에 실패했습니다: ${task.exception?.message}"
-                                }
-                            }
+                    authViewModel.login {
+                        navController.navigate("calendar") // 로그인 성공 시 캘린더 화면으로 이동
                     }
                 },
                 modifier = Modifier.fillMaxWidth()
