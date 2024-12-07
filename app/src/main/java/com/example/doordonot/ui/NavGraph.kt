@@ -11,6 +11,7 @@ import androidx.navigation.compose.rememberNavController
 import com.example.doordonot.auth.LoginPage
 import com.example.doordonot.auth.SignUpPage
 import com.example.doordonot.habit.AddHabitPage
+import com.example.doordonot.habit.HabitListScreen
 import com.example.doordonot.setting.PrivacyPolicyPage
 import com.example.doordonot.setting.SettingsPage
 import com.example.doordonot.setting.TermsOfServicePage
@@ -47,5 +48,5 @@ fun NavGraph(navController: NavHostController = rememberNavController()) {
         composable("habit_list") {
             HabitListScreen(navController, habitViewModel, authViewModel)
         }
-    }
-}
+        composable("habit_list") { HabitListScreen(navController, habitViewModel, authViewModel) }
+    }}
