@@ -7,6 +7,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -34,7 +35,12 @@ fun HabitListScreen(
         }
 
         Scaffold(
-            topBar = { TopBar(title = "습관 목록") },
+            topBar = {
+                TopBarWithBackButton(
+                    title = "습관 목록",
+                    onBackClick = { navController.popBackStack() }
+                )
+            },
             floatingActionButton = {
                 FloatingActionButton(
                     onClick = { navController.navigate("make_habit") },
@@ -62,7 +68,12 @@ fun HabitListScreen(
                 ) {
                     items(habits) { habit ->
                         HabitItem(habit = habit, onClick = {
-                            navController.navigate("habit_detail/${habit.id}")
+                            if (habit.id.isNotBlank()) {
+                                navController.navigate("habit_detail/${habit.id}")
+                            } else {
+                                // Debugging용 로그 추가
+                                println("Invalid habit ID: ${habit.id}")
+                            }
                         })
                         Spacer(modifier = Modifier.height(8.dp))
                     }
@@ -79,6 +90,19 @@ fun HabitListScreen(
             }
         }
     }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun TopBarWithBackButton(title: String, onBackClick: () -> Unit) {
+    TopAppBar(
+        title = { Text(text = title) },
+        navigationIcon = {
+            IconButton(onClick = onBackClick) {
+                Icon(Icons.Default.ArrowBack, contentDescription = "뒤로가기")
+            }
+        }
+    )
 }
 
 @Composable

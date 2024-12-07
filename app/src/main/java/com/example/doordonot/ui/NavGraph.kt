@@ -1,5 +1,6 @@
 package com.example.doordonot
 
+import HabitDetailScreen
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
@@ -16,7 +17,6 @@ import com.example.doordonot.viewmodel.CalendarViewModel
 import com.example.doordonot.viewmodel.HabitViewModel
 import com.example.doordonot.auth.AuthViewModel
 import com.example.doordonot.habit.AddHabitPage
-import com.example.doordonot.habit.HabitDetailScreen
 import com.example.doordonot.habit.HabitListScreen
 import com.example.doordonot.ui.CalendarPage
 import com.example.doordonot.ui.HabitManagementPage
@@ -42,7 +42,12 @@ fun NavGraph(navController: NavHostController = rememberNavController()) {
         composable("add_habit") { AddHabitPage(navController, habitViewModel, authViewModel) }
         composable("habit_detail/{habitId}") { backStackEntry ->
             val habitId = backStackEntry.arguments?.getString("habitId") ?: ""
-            HabitDetailScreen(navController = navController, habitId = habitId)
+            HabitDetailScreen(
+                navController = navController,
+                habitId = habitId,
+                habitViewModel = habitViewModel,
+                authViewModel = authViewModel
+            )
         }
     }
 }
