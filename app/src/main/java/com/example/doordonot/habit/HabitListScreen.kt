@@ -37,7 +37,7 @@ fun HabitListScreen(
             topBar = { TopBar(title = "습관 목록") },
             floatingActionButton = {
                 FloatingActionButton(
-                    onClick = { navController.navigate("add_habit") },
+                    onClick = { navController.navigate("make_habit") },
                     containerColor = MaterialTheme.colorScheme.primary
                 ) {
                     Icon(Icons.Default.Add, contentDescription = "습관 추가")
