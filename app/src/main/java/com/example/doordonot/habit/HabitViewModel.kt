@@ -113,6 +113,24 @@ class HabitViewModel(
         }
     }
 
+    // 특정 날짜의 DailyStatus isChecked 값을 토글하는 함수
+    fun toggleDailyStatus(
+        habitId: String,
+        userId: String,
+        date: String,
+        onComplete: (Boolean) -> Unit
+    ) {
+        viewModelScope.launch {
+            habitRepository.toggleDailyStatus(habitId, userId, date) { success ->
+                if (success) {
+                    // 연속 성공 횟수 업데이트
+                    loadDailyStatuses(habitId, userId)
+                }
+                onComplete(success)
+            }
+        }
+    }
+
     // 습관 상태 업데이트
     fun updateDailyStatus(habitId: String, userId: String, dailyStatus: DailyStatus) {
         viewModelScope.launch {

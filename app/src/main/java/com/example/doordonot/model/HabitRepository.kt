@@ -28,10 +28,16 @@ class HabitRepository {
             .collection("habits")
             .get()
             .addOnSuccessListener { snapshot ->
-                val habits = snapshot.toObjects(Habit::class.java)
+                val habits = snapshot.documents.mapNotNull { doc ->
+                    // doc.toObject(Habit::class.java)로 Habit 객체를 만들되, doc.id를 이용해 id 필드를 설정
+                    val habit = doc.toObject(Habit::class.java)
+                    habit?.copy(id = doc.id) // 여기서 doc.id를 habit.id에 설정
+                }
                 onResult(habits)
             }
-            .addOnFailureListener { onResult(emptyList()) }
+            .addOnFailureListener {
+                onResult(emptyList())
+            }
     }
 
     // 습관 상태 업데이트
@@ -195,6 +201,57 @@ class HabitRepository {
     private fun getCurrentDate(): String {
         val dateFormat = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
         return dateFormat.format(java.util.Date())
+    }
+
+    // 특정 날짜의 DailyStatus isChecked 값을 변경하는 함수
+    fun toggleDailyStatus(
+        habitId: String,
+        userId: String,
+        date: String,
+        onComplete: (Boolean) -> Unit
+    ) {
+        val habitRef = db.collection("users")
+            .document(userId)
+            .collection("habits")
+            .document(habitId)
+
+        val dailyStatusRef = habitRef.collection("dailyStatus").document(date)
+
+        dailyStatusRef.get()
+            .addOnSuccessListener { snapshot ->
+                if (snapshot.exists()) {
+                    // 기존 DailyStatus 객체 가져오기
+                    val currentStatus = snapshot.toObject(DailyStatus::class.java)
+                    if (currentStatus != null) {
+                        // isChecked 값 반전
+                        val updatedStatus = currentStatus.copy(isChecked = !currentStatus.isChecked)
+
+                        // Firestore에 업데이트
+                        dailyStatusRef.set(updatedStatus)
+                            .addOnSuccessListener {
+                                onComplete(true)
+                            }
+                            .addOnFailureListener {
+                                onComplete(false)
+                            }
+                    } else {
+                        onComplete(false)
+                    }
+                } else {
+                    // 상태가 없으면 초기화 후 저장
+                    val initialStatus = DailyStatus(date = date, isChecked = true)
+                    dailyStatusRef.set(initialStatus)
+                        .addOnSuccessListener {
+                            onComplete(true)
+                        }
+                        .addOnFailureListener {
+                            onComplete(false)
+                        }
+                }
+            }
+            .addOnFailureListener {
+                onComplete(false)
+            }
     }
 
     // 연속 성공 계산
