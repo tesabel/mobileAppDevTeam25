@@ -27,7 +27,7 @@ fun HabitDetailScreen(
     // 유저나 habitId가 유효하지 않으면 리스트 화면으로 이동
     if (user == null || habitId.isBlank()) {
         LaunchedEffect(Unit) {
-            println("Invalid user or habitId, navigate back to list.")
+            println("HabitDetailScreen: Invalid user or habitId, navigating back to habit_list.")
             navController.navigate("habit_list") {
                 popUpTo("habit_detail") { inclusive = true }
             }
@@ -37,7 +37,7 @@ fun HabitDetailScreen(
 
     // 유저와 habitId가 유효하므로 Firestore에서 해당 습관 로드
     LaunchedEffect(habitId, user!!.uid) {
-        println("Loading habit detail for habitId: $habitId, user: ${user!!.uid}")
+        println("HabitDetailScreen: Loading habit detail for habitId: $habitId, userId: ${user!!.uid}")
         habitViewModel.loadHabit(habitId, user!!.uid)
     }
 
@@ -46,7 +46,7 @@ fun HabitDetailScreen(
             TopBarWithBackButton(
                 title = "습관 상세",
                 onBackClick = {
-                    println("Back button pressed, navigating back...")
+                    println("HabitDetailScreen: Back button pressed, navigating back.")
                     navController.popBackStack()
                 }
             )
@@ -60,15 +60,15 @@ fun HabitDetailScreen(
         ) {
             // currentHabit 로딩 완료 여부에 따라 UI 변경
             if (currentHabit != null) {
-                println("Habit loaded: ${currentHabit!!.name}, preparing UI...")
+                println("HabitDetailScreen: Habit loaded: ${currentHabit!!.name}, preparing UI...")
                 HabitDetailContent(
-                    habit = currentHabit,
+                    habit = currentHabit!!,
                     habitViewModel = habitViewModel,
                     userId = user!!.uid
                 )
             } else {
                 // currentHabit가 아직 null이면 로딩 스피너 표시
-                println("Habit not loaded yet, showing spinner.")
+                println("HabitDetailScreen: Habit not loaded yet, showing spinner.")
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         CircularProgressIndicator()
@@ -96,21 +96,14 @@ fun TopBarWithBackButton(title: String, onBackClick: () -> Unit) {
 }
 
 @Composable
-fun HabitDetailContent(habit: Habit?, habitViewModel: HabitViewModel, userId: String) {
-    // habit가 null이 아닐 때만 진행
-    if (habit == null) {
-        println("HabitDetailContent called with null habit, showing message.")
-        Text("습관 정보를 불러올 수 없습니다.")
-        return
-    }
-
+fun HabitDetailContent(habit: Habit, habitViewModel: HabitViewModel, userId: String) {
     var isChecked by remember { mutableStateOf(false) }
     var isLoading by remember { mutableStateOf(true) }
     val currentDate = getCurrentDate()
 
-    // currentHabit가 로딩된 이후 상태를 초기화하는 LaunchedEffect
-    LaunchedEffect(habit.id) {
-        println("Fetching dailyStatus for habit: ${habit.id}, date: $currentDate")
+    // DailyStatus를 초기화하고 로딩하는 LaunchedEffect
+    LaunchedEffect(habit.id, userId, currentDate) {
+        println("HabitDetailContent: Loading DailyStatus for habitId: ${habit.id}, date: $currentDate")
         habitViewModel.getOrInitializeDailyStatus(
             habit.id,
             userId,
@@ -118,15 +111,16 @@ fun HabitDetailContent(habit: Habit?, habitViewModel: HabitViewModel, userId: St
         ) { dailyStatus ->
             if (dailyStatus != null) {
                 isChecked = dailyStatus.isChecked
+                println("HabitDetailContent: DailyStatus loaded, isChecked = ${dailyStatus.isChecked}")
             } else {
-                println("DailyStatus is null, initializing with default false.")
+                println("HabitDetailContent: DailyStatus is null, setting isChecked to false")
                 isChecked = false
             }
             isLoading = false
         }
     }
 
-    println("Rendering HabitDetailContent for habit: ${habit.name}, isChecked: $isChecked, isLoading: $isLoading")
+    println("HabitDetailContent: Rendering with isChecked = $isChecked, isLoading = $isLoading")
 
     Column(modifier = Modifier.fillMaxSize()) {
         Text(text = "습관 이름: ${habit.name}", style = MaterialTheme.typography.titleLarge)
@@ -155,7 +149,7 @@ fun HabitDetailContent(habit: Habit?, habitViewModel: HabitViewModel, userId: St
                 checked = isChecked,
                 enabled = !isLoading,
                 onCheckedChange = { checked ->
-                    println("Checkbox clicked: $checked, toggling dailyStatus.")
+                    println("HabitDetailContent: Checkbox clicked: $checked")
                     isChecked = checked
                     habitViewModel.toggleDailyStatus(
                         habitId = habit.id,
@@ -163,10 +157,10 @@ fun HabitDetailContent(habit: Habit?, habitViewModel: HabitViewModel, userId: St
                         date = currentDate
                     ) { success ->
                         if (!success) {
-                            println("Failed to toggleDailyStatus, rolling back checkbox state.")
+                            println("HabitDetailContent: Failed to toggleDailyStatus, reverting isChecked")
                             isChecked = !checked
                         } else {
-                            println("toggleDailyStatus succeeded, state updated.")
+                            println("HabitDetailContent: toggleDailyStatus succeeded")
                         }
                     }
                 }
