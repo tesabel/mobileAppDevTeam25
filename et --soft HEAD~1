@@ -1,0 +1,166 @@
+[33mcommit 878b7348dd0c17fb59750605de152badc645277e[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m)[m
+Merge: e95a239 c2a032c
+Author: yuna <younasi0318@cau.ac.kr>
+Date:   Sat Dec 7 19:29:12 2024 +0900
+
+    test
+
+[33mcommit e95a239966d41831c28f47e25e8112a974115ec8[m
+Author: yuna <younasi0318@cau.ac.kr>
+Date:   Sat Dec 7 18:36:19 2024 +0900
+
+    저장
+
+[33mcommit c2a032c1f86d2822216a9eb74791780e4987401e[m
+Merge: 41d8a44 54a48c7
+Author: baehyeonjun <cn6tee@gmail.com>
+Date:   Sat Dec 7 18:35:15 2024 +0900
+
+    Merge pull request #4 from tesabel/login
+    
+    Login
+
+[33mcommit 54a48c762d1881d52812b2c6b8ab3be4cec1dffd[m
+Author: bhj2rr <cn6tee@gmail.com>
+Date:   Sat Dec 7 18:16:55 2024 +0900
+
+    fix
+
+[33mcommit e619f8658a9f119caa963a1481fa70d2b27afc87[m
+Author: bhj2rr <cn6tee@gmail.com>
+Date:   Sat Dec 7 16:58:37 2024 +0900
+
+    feat : 알림
+
+[33mcommit 1ffebcf00f4242de8b0f2b26a8bcde38324188b1[m
+Merge: 7c71d61 41d8a44
+Author: yuna <younasi0318@cau.ac.kr>
+Date:   Thu Dec 5 20:35:59 2024 +0900
+
+    merge
+
+[33mcommit 41d8a44a1ad8a1aff201aefa91ab3d976e545c48[m
+Merge: 030ce9d e6682df
+Author: baehyeonjun <cn6tee@gmail.com>
+Date:   Thu Dec 5 14:27:13 2024 +0900
+
+    Merge pull request #3 from tesabel/login
+    
+    Login
+
+[33mcommit 030ce9d265f71e8edb4788a42cfead54950624b8[m
+Merge: e4a2e13 75e2e45
+Author: baehyeonjun <cn6tee@gmail.com>
+Date:   Thu Dec 5 14:23:34 2024 +0900
+
+    Merge pull request #2 from tesabel/login
+    
+    firestore 설정 추가
+
+[33mcommit e6682df9ccb923b5498c055b3555224f5694e04f[m
+Author: bhj2rr <cn6tee@gmail.com>
+Date:   Thu Dec 5 09:51:28 2024 +0900
+
+    fix
+
+[33mcommit bf1956d14caa4c82b3497b5c01550dda2a180569[m
+Author: bhj2rr <cn6tee@gmail.com>
+Date:   Thu Dec 5 08:59:45 2024 +0900
+
+    feat : 습관 등록
+
+[33mcommit 49a7966494f035e570dba563745d0501d160e5bc[m
+Author: bhj2rr <cn6tee@gmail.com>
+Date:   Thu Dec 5 07:50:46 2024 +0900
+
+    feat : firestore 설정
+
+[33mcommit 75e2e45b7bb6d6914ea9012857f4cf780d553442[m
+Merge: 2f7d0ef e4ac46f
+Author: bhj2rr <cn6tee@gmail.com>
+Date:   Tue Dec 3 13:01:16 2024 +0900
+
+    fix : ViewModel 분리
+
+[33mcommit 7c71d61cb7752ad184c45e7301c20904a2a6e887[m[33m ([m[1;31morigin/listview[m[33m, [m[1;32mlistview[m[33m)[m
+Merge: e4a2e13 77b2780
+Author: yuna <younasi0318@cau.ac.kr>
+Date:   Fri Nov 29 21:59:42 2024 +0900
+
+    리스트뷰 수정
+
+[33mcommit 2f7d0ef5b005e5674725b294f167c08a7319c18e[m
+Author: bhj2rr <cn6tee@gmail.com>
+Date:   Tue Nov 26 14:31:05 2024 +0900
+
+    .
+
+[33mcommit e4ac46f6f737ab4a9d2a7440ec4a40ecac89f075[m
+Author: jogwangjae <maxi961009@gmail.com>
+Date:   Tue Nov 26 14:26:02 2024 +0900
+
+    main에 변경사항 적용
+
+[33mcommit 76b3911f1b384194e76b5a7e77fa2eaf8a383d35[m
+Merge: ea0b3ba 77b2780
+Author: bhj2rr <cn6tee@gmail.com>
+Date:   Tue Nov 26 14:06:42 2024 +0900
+
+    fix : 충돌 해결
+
+[33mcommit e4a2e1399a21d439a5204d33233db80b59c28ccb[m
+Merge: 7f3a0ab ea0b3ba
+Author: baehyeonjun <cn6tee@gmail.com>
+Date:   Tue Nov 26 13:14:55 2024 +0900
+
+    Merge pull request #1 from tesabel/login
+    
+    Login
+
+[33mcommit ea0b3ba896fc2e2576defe6ce7c774fef5245150[m
+Author: bhj2rr <cn6tee@gmail.com>
+Date:   Tue Nov 26 13:05:53 2024 +0900
+
+    fix : 약관페이지
+
+[33mcommit 622c9b8dfb33021593d4805f1f7f17c269b15392[m
+Author: bhj2rr <cn6tee@gmail.com>
+Date:   Tue Nov 26 03:54:03 2024 +0900
+
+    feat : 로그아웃, 탈퇴, 이용약관
+
+[33mcommit a81b7ca4fa4537bb5fb6e4cdef4227f94117ba0c[m
+Author: bhj2rr <cn6tee@gmail.com>
+Date:   Tue Nov 26 03:36:22 2024 +0900
+
+    feat : 로그인, 회원가입
+
+[33mcommit 4b34a86f66a6889e720133ec4859901f9b24bde7[m
+Author: bhj2rr <cn6tee@gmail.com>
+Date:   Thu Nov 21 14:33:32 2024 +0900
+
+    signin, signup 구현
+
+[33mcommit 77b2780191f904364d0f9c4f5ee1a7da258c97ae[m
+Author: yuna <younasi0318@cau.ac.kr>
+Date:   Thu Nov 21 14:17:06 2024 +0900
+
+    HabitManagementPage
+
+[33mcommit 98f7f82da4c4c61e406762a02db64035bd4f47df[m
+Author: yuna <younasi0318@cau.ac.kr>
+Date:   Thu Nov 21 14:15:05 2024 +0900
+
+    test
+
+[33mcommit 7f3a0aba77e2ff7d3b938af743228166f1a0abb6[m
+Author: tesabel <woochan0408@naver.com>
+Date:   Mon Nov 18 11:47:32 2024 +0900
+
+    기본 틀 구성
+
+[33mcommit 4b9f288d88a3e11df5d7585ff6709cc41a5c7922[m
+Author: tesabel <woochan0408@naver.com>
+Date:   Wed Nov 6 09:12:27 2024 +0900
+
+    Initial commit
