@@ -13,17 +13,20 @@ import kotlinx.coroutines.launch
 class HabitViewModel(
     private val habitRepository: HabitRepository = HabitRepository()
 ) : ViewModel() {
+    // 모든 습관 목록
     private val _habits = MutableStateFlow<List<Habit>>(emptyList())
     val habits: StateFlow<List<Habit>> = _habits
 
-    private val _errorMessage = MutableStateFlow("")
-    val errorMessage: StateFlow<String> = _errorMessage
-
-    private val _dailyStatuses = MutableStateFlow<List<DailyStatus>>(emptyList())
-    val dailyStatuses: StateFlow<List<DailyStatus>> = _dailyStatuses
-
+    // 현재 선택된 습관
     private val _currentHabit = MutableStateFlow<Habit?>(null)
     val currentHabit: StateFlow<Habit?> = _currentHabit
+
+    // 특정 습관의 DailyStatus 목록
+    private val _currentHabitDailyStatuses = MutableStateFlow<List<DailyStatus>>(emptyList())
+    val currentHabitDailyStatuses: StateFlow<List<DailyStatus>> = _currentHabitDailyStatuses
+
+    private val _errorMessage = MutableStateFlow("")
+    val errorMessage: StateFlow<String> = _errorMessage
 
     // 습관 추가
     fun addHabit(habit: Habit, userId: String, onComplete: () -> Unit) {
@@ -60,29 +63,30 @@ class HabitViewModel(
         }
     }
 
-    // 습관 상태 업데이트
-    fun updateDailyStatus(habitId: String, userId: String, dailyStatus: DailyStatus) {
+    // 특정 습관 로드
+    fun loadHabit(habitId: String, userId: String) {
         viewModelScope.launch {
-            habitRepository.updateDailyStatus(habitId, userId, dailyStatus) { success ->
-                if (success) {
-                    loadHabits(userId)
+            habitRepository.getHabits(userId) { habitsList ->
+                val habit = habitsList.find { it.id == habitId }
+                if (habit != null) {
+                    _currentHabit.value = habit
                 } else {
-                    _errorMessage.value = "습관 상태 업데이트에 실패했습니다."
+                    _errorMessage.value = "해당 습관 정보를 찾을 수 없습니다."
                 }
             }
         }
     }
 
-    // 날짜별 습관 상태 불러오기
+    // 특정 습관의 DailyStatus 로드
     fun loadDailyStatuses(habitId: String, userId: String) {
         viewModelScope.launch {
             habitRepository.getDailyStatuses(habitId, userId) { statuses ->
-                _dailyStatuses.value = statuses
+                _currentHabitDailyStatuses.value = statuses
             }
         }
     }
 
-    // 특정 날짜의 습관 상태 가져오기 또는 초기화
+    // 특정 습관의 DailyStatus 가져오기 또는 초기화
     fun getOrInitializeDailyStatus(
         habitId: String,
         userId: String,
@@ -92,15 +96,15 @@ class HabitViewModel(
         viewModelScope.launch {
             habitRepository.getOrInitializeDailyStatus(habitId, userId, date) { status ->
                 if (status != null) {
-                    // 기존 상태 업데이트
-                    val updatedStatuses = _dailyStatuses.value.toMutableList()
+                    // 상태 업데이트
+                    val updatedStatuses = _currentHabitDailyStatuses.value.toMutableList()
                     val index = updatedStatuses.indexOfFirst { it.date == date }
                     if (index != -1) {
                         updatedStatuses[index] = status
                     } else {
                         updatedStatuses.add(status)
                     }
-                    _dailyStatuses.value = updatedStatuses
+                    _currentHabitDailyStatuses.value = updatedStatuses
                     onResult(status)
                 } else {
                     onResult(null)
@@ -109,12 +113,16 @@ class HabitViewModel(
         }
     }
 
-    // 특정 습관 로드
-    fun loadHabit(habitId: String, userId: String) {
+    // 습관 상태 업데이트
+    fun updateDailyStatus(habitId: String, userId: String, dailyStatus: DailyStatus) {
         viewModelScope.launch {
-            habitRepository.getHabits(userId) { habitsList ->
-                val habit = habitsList.find { it.id == habitId }
-                _currentHabit.value = habit
+            habitRepository.updateDailyStatus(habitId, userId, dailyStatus) { success ->
+                if (success) {
+                    // 상태 업데이트 성공 시 다시 로드
+                    loadDailyStatuses(habitId, userId)
+                } else {
+                    _errorMessage.value = "습관 상태 업데이트에 실패했습니다."
+                }
             }
         }
     }

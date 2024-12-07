@@ -62,7 +62,12 @@ fun HabitListScreen(
                 ) {
                     items(habits) { habit ->
                         HabitItem(habit = habit, onClick = {
-                            navController.navigate("habit_detail/${habit.id}")
+                            if (habit.id.isNotBlank()) {
+                                navController.navigate("habit_detail/${habit.id}")
+                            } else {
+                                // Debugging용 로그 추가
+                                println("Invalid habit ID: ${habit.id}")
+                            }
                         })
                         Spacer(modifier = Modifier.height(8.dp))
                     }
