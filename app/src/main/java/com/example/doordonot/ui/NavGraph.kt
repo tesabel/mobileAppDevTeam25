@@ -15,6 +15,8 @@ import com.example.doordonot.setting.TermsOfServicePage
 import com.example.doordonot.viewmodel.CalendarViewModel
 import com.example.doordonot.viewmodel.HabitViewModel
 import com.example.doordonot.auth.AuthViewModel
+import com.example.doordonot.habit.HabitDetailScreen
+import com.example.doordonot.habit.HabitListScreen
 import com.example.doordonot.ui.CalendarPage
 import com.example.doordonot.ui.HabitManagementPage
 import com.example.doordonot.ui.MakeHabitPage
@@ -34,6 +36,16 @@ fun NavGraph(navController: NavHostController = rememberNavController()) {
         composable("settings") { SettingsPage(navController, authViewModel, habitViewModel) }
         composable("terms_of_service") { TermsOfServicePage(navController) }
         composable("privacy_policy") { PrivacyPolicyPage(navController) }
+
         composable("habit_list") { HabitListScreen(navController, habitViewModel, authViewModel) }
+        composable("add_habit") { AddHabitPage(navController, habitViewModel, authViewModel) }
+        // 기존 습관 목록 페이지 추가
+        composable("habit_list") {
+            HabitListScreen(navController, habitViewModel, authViewModel)
+        }
+        composable("habit_detail/{habitId}") { backStackEntry ->
+            val habitId = backStackEntry.arguments?.getString("habitId") ?: ""
+            HabitDetailScreen(navController = navController, habitId = habitId)
+        }
     }
 }
