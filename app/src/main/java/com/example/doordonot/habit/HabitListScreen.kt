@@ -1,3 +1,4 @@
+// com.example.doordonot.habit.HabitListScreen.kt
 package com.example.doordonot.habit
 
 import androidx.compose.foundation.clickable
@@ -6,6 +7,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -33,10 +35,15 @@ fun HabitListScreen(
         }
 
         Scaffold(
-            topBar = { TopBar(title = "습관 목록") },
+            topBar = {
+                TopBarWithBackButton(
+                    title = "습관 목록",
+                    onBackClick = { navController.popBackStack() }
+                )
+            },
             floatingActionButton = {
                 FloatingActionButton(
-                    onClick = { navController.navigate("add_habit") },
+                    onClick = { navController.navigate("make_habit") },
                     containerColor = MaterialTheme.colorScheme.primary
                 ) {
                     Icon(Icons.Default.Add, contentDescription = "습관 추가")
@@ -60,7 +67,14 @@ fun HabitListScreen(
                         .padding(16.dp)
                 ) {
                     items(habits) { habit ->
-                        HabitItem(habit = habit, onClick = { /* 상세 화면으로 이동 */ })
+                        HabitItem(habit = habit, onClick = {
+                            if (habit.id.isNotBlank()) {
+                                navController.navigate("habit_detail/${habit.id}")
+                            } else {
+                                // Debugging용 로그 추가
+                                println("Invalid habit ID: ${habit.id}")
+                            }
+                        })
                         Spacer(modifier = Modifier.height(8.dp))
                     }
                 }
@@ -76,6 +90,19 @@ fun HabitListScreen(
             }
         }
     }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun TopBarWithBackButton(title: String, onBackClick: () -> Unit) {
+    TopAppBar(
+        title = { Text(text = title) },
+        navigationIcon = {
+            IconButton(onClick = onBackClick) {
+                Icon(Icons.Default.ArrowBack, contentDescription = "뒤로가기")
+            }
+        }
+    )
 }
 
 @Composable

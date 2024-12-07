@@ -1,4 +1,3 @@
-// HabitManagementPage.kt
 
 package com.example.doordonot.ui
 
@@ -34,82 +33,105 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.doordonot.auth.AuthViewModel
+import com.example.doordonot.model.DailyStatus
+import com.example.doordonot.model.HabitType
 import com.example.doordonot.ui.components.BottomNavigationBar
 import com.example.doordonot.ui.components.TopBar
 import com.example.doordonot.viewmodel.HabitViewModel
+import java.time.LocalDate
 
 @Composable
 fun HabitManagementPage(
     navController: NavController,
-    viewModel: HabitViewModel = viewModel(),
-    authViewModel: AuthViewModel
+    habitViewModel: HabitViewModel = viewModel(),
+    authViewModel: AuthViewModel = viewModel()
 ) {
-    Scaffold(
-        topBar = { TopBar(title = "습관 관리") },
-        bottomBar = { BottomNavigationBar(navController) },
-        floatingActionButton = {
-            FloatingActionButton(onClick = { navController.navigate("make_habit") }) {
-                Icon(imageVector = Icons.Default.Add, contentDescription = "add")
-            }
+    val habits by habitViewModel.habits.collectAsState()
+    val user by authViewModel.currentUser.collectAsState()
+
+    user?.let { currentUser ->
+        LaunchedEffect(currentUser.uid) {
+            habitViewModel.loadHabits(currentUser.uid)
         }
-    ) { padding ->
-        val habits by viewModel.habits.collectAsState()
 
-        //형성중인 습관
-        val doList: List<Habit> = habits.filter { it.isMaintained}
-        //유지중인 습관
-        val donotList: List<Habit> = habits.filter { !it.isMaintained}
-        val today = LocalDate.now()
-        LongPressDraggable(modifier = Modifier.fillMaxSize()) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding)
-                    .padding(4.dp)
-            ) {
-                Column {
-                    //날짜
-                    Text(
-                        text = "${today}",
-                        modifier = Modifier.padding(16.dp),
-                        style = typography.headlineMedium.copy()
-                    )
-                    //습관 리스트
-                    Row {
-                        // Do list
-                        DropTarget<Habit>(
-                            modifier = Modifier
-                                .weight(1f)
-                                .fillMaxHeight()
-                                .padding(start = 8.dp, end = 4.dp),
-                            onDrop = { habit ->
-                                // isMaintained 상태 반전
-                                viewModel.updateHabit(habit.copy(isMaintained = false))
-                            }
-                        ) { isInBound, _ ->
-                            List(
-                                modifier = Modifier.fillMaxSize(),
-                                title = "형성 중인 습관",
-                                items = doList,
-                            )
-                        }
+        Scaffold(
+            topBar = { TopBar(title = "습관 관리") },
+            bottomBar = { BottomNavigationBar(navController) },
+            floatingActionButton = {
+                FloatingActionButton(onClick = { navController.navigate("make_habit") }) {
+                    Icon(imageVector = Icons.Default.Add, contentDescription = "add")
+                }
+            }
+        ) { padding ->
 
-                        // Donot list
-                        DropTarget<Habit>(
-                            modifier = Modifier
-                                .weight(1f)
-                                .fillMaxHeight()
-                                .padding(start = 4.dp, end = 8.dp),
-                            onDrop = { habit ->
-                                // isMaintained 상태 반전
-                                viewModel.updateHabit(habit.copy(isMaintained = true))
+            //형성중인 습관
+            val doList: List<com.example.doordonot.model.Habit> =
+                habits.filter { it.type.name == "FORMING" }
+            val donotList: List<com.example.doordonot.model.Habit> =
+                habits.filter { it.type.name == "MAINTAIN" }
+            //유지중인 습관
+            val today = LocalDate.now()
+            LongPressDraggable(modifier = Modifier.fillMaxSize()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(padding)
+                        .padding(4.dp)
+                ) {
+                    Column {
+                        //날짜
+                        Text(
+                            text = "${today}",
+                            modifier = Modifier.padding(16.dp),
+                            style = typography.headlineMedium.copy()
+                        )
+                        //습관 리스트
+                        Row {
+                            // Do list
+                            DropTarget<com.example.doordonot.model.Habit>(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .fillMaxHeight()
+                                    .padding(start = 8.dp, end = 4.dp),
+                                onDrop = {
+                                        habit ->
+                                    // 습관을 형성 중으로 변경
+                                    habitViewModel.updateHabitType(habit.id, currentUser.uid, "FORMING")
+//                                habit ->
+//                                // isMaintained 상태 반전
+                                    //habitViewModel.updateHabit(habit.copy(type = "FORMING"))
+                                }
+                            ) { isInBound, _ ->
+                                List(
+                                    modifier = Modifier.fillMaxSize(),
+                                    title = "형성 중인 습관",
+                                    uid = currentUser.uid,
+                                    items = doList,
+                                )
                             }
-                        ) { isInBound, _ ->
-                            List(
-                                modifier = Modifier.fillMaxSize(),
-                                title = "유지 중인 습관",
-                                items = donotList,
-                            )
+
+                            // Donot list
+                            DropTarget<com.example.doordonot.model.Habit>(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .fillMaxHeight()
+                                    .padding(start = 4.dp, end = 8.dp),
+                                onDrop = {
+                                        habit ->
+                                    // 습관을 유지 중으로 변경
+                                    habitViewModel.updateHabitType(habit.id, currentUser.uid, "MAINTAIN")
+//                                habit ->
+//                                // isMaintained 상태 반전
+                                   // habitViewModel.updateHabit(habit.copy(isMaintained = true))
+                                }
+                            ) { isInBound, _ ->
+                                List(
+                                    modifier = Modifier.fillMaxSize(),
+                                    title = "유지 중인 습관",
+                                    items = donotList,
+                                    uid = currentUser.uid,
+                                )
+                            }
                         }
                     }
                 }
@@ -118,14 +140,14 @@ fun HabitManagementPage(
     }
 }
 
-
 //해더+리스트 컬럼
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun List(
     modifier: Modifier = Modifier,
+    uid: String,
     title: String,
-    items: List<Habit>,
+    items: List<com.example.doordonot.model.Habit>,
 ) {
 
     Column(
@@ -143,15 +165,15 @@ fun List(
                     modifier = Modifier
                         .background(
                             if (title == "형성 중인 습관") Color(248, 84, 83, 255)
-                            else Color(13,146,244)
+                            else Color(13, 146, 244)
                         )
                         .padding(horizontal = 8.dp)
                         .fillMaxWidth(),
                 )
             }
             //리스트 내용
-            items(items) { h ->
-                DisplayingList(habit = h)
+            items(items) { item ->
+                DisplayingList(habit = item, userId = uid)
                 Divider(modifier = Modifier.height(1.dp))
             }
         }
@@ -161,20 +183,27 @@ fun List(
 //리스트 표시
 @Composable
 fun DisplayingList(
-    habit: Habit,
+    habit: com.example.doordonot.model.Habit,
+    userId: String,
     modifier: Modifier = Modifier,
     viewModel: HabitViewModel = viewModel()
 ) {
-    // 체크박스 체크 여부
-    val today = LocalDate.now()
-    var isCheckedToday = viewModel.isHabitCheckedOnDate(habit, today)
-    //이름 클릭 시 전체보기
+    val today = LocalDate.now().toString()
     var isClicked by rememberSaveable { mutableStateOf(false) }
+    var isCheckedToday by rememberSaveable { mutableStateOf(habit.type == HabitType.MAINTAIN) }
+    var dailyStatus by remember { mutableStateOf(DailyStatus(date = today, isChecked = isCheckedToday)) }
+
+    LaunchedEffect(habit) {
+        isCheckedToday  = habit.type == HabitType.MAINTAIN
+        dailyStatus = DailyStatus(date = today, isChecked = isCheckedToday)
+    }
 
     DragTarget(modifier = Modifier, dataToDrop = habit) {
         ElevatedCard(
             shape = RoundedCornerShape(4.dp),
-            modifier = Modifier.padding(vertical = 8.dp).fillMaxSize(),
+            modifier = Modifier
+                .padding(vertical = 8.dp)
+                .fillMaxSize(),
         ) {
             Row(
                 modifier = Modifier.fillMaxSize(),
@@ -182,17 +211,17 @@ fun DisplayingList(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Column(
-                    modifier = modifier.padding(8.dp).weight(1f) // 컨텐츠 공간 확보
+                    modifier = modifier
+                        .padding(8.dp)
+                        .weight(1f)
                 ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
                         // 카테고리
                         OutlinedCard(
                             modifier = Modifier.padding(horizontal = 4.dp),
                             border = BorderStroke(
                                 width = 2.dp,
-                                color = when (habit.categories.joinToString(", ")) {
+                                color = when (habit.category) {
                                     "금지" -> Color(248, 84, 83)
                                     "운동" -> Color(0, 150, 136, 255)
                                     "공부" -> Color(13, 146, 244)
@@ -200,7 +229,7 @@ fun DisplayingList(
                                 }
                             ),
                             colors = CardDefaults.cardColors(
-                                when (habit.categories.joinToString(", ")) {
+                                when (habit.category) {
                                     "금지" -> Color(248, 84, 83, 100)
                                     "운동" -> Color(0, 150, 136, 100)
                                     "공부" -> Color(13, 146, 244, 100)
@@ -213,11 +242,11 @@ fun DisplayingList(
                                 modifier = Modifier
                                     .padding(horizontal = 8.dp)
                                     .padding(vertical = 2.dp),
-                                text = habit.categories.joinToString(", "),
+                                text = habit.category,
                                 style = typography.bodySmall
                             )
                         }
-                        // 습관명
+
                         Text(
                             text = habit.name,
                             maxLines = if (isClicked) 2 else 1,
@@ -228,34 +257,34 @@ fun DisplayingList(
 
                     Spacer(modifier = Modifier.height(4.dp))
 
-                    // 총 성공일수
                     Text(
                         modifier = Modifier.padding(horizontal = 4.dp),
-                        text = "총 성공 : ${viewModel.getTotalDays(habit)}일",
+                        text = "연속 성공 : ${habit.streak}일",
                         style = typography.bodySmall
-                    )
-
-                    Spacer(modifier = Modifier.height(4.dp))
-
-                    // 연속 성공일수
-                    Text(
-                        modifier = Modifier.padding(horizontal = 4.dp),
-                        text = "연속 성공 : ${viewModel.getConsecutiveDays(habit)}일",
-                        style = typography.bodySmall
-                    )
-                    Text(
-                        text = "${habit.isMaintained}"
                     )
                 }
-                // 체크박스 - 오른쪽 끝에 고정
+
                 Checkbox(
-                    checked = isCheckedToday,
-                    onCheckedChange = {viewModel.setHabitCheck(habit, today, it)}
+                    checked = dailyStatus.isChecked,
+                    onCheckedChange = { isChecked ->
+                        isCheckedToday = isChecked
+                        dailyStatus = DailyStatus(date = today, isChecked = isChecked)
+                        // viewModel 업데이트
+//                        viewModel.updateDailyStatus(habit.id, userId, dailyStatus)
+                    }
                 )
             }
         }
     }
+
+    // dailyStatus 정보를 Text로 표시
+//    Text(
+//        text = " ${userId}, ${habit.id},Date: ${dailyStatus.date}, Is Checked: ${dailyStatus.isChecked}, ${habit.type}",
+//        style = typography.bodySmall,
+//        modifier = Modifier.padding(16.dp)
+//    )
 }
+
 
 
 //------------드래그/드롭 함수 구현-----------------------
