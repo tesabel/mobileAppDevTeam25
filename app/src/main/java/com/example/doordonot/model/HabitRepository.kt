@@ -237,7 +237,7 @@ class HabitRepository {
         return dateFormat.format(java.util.Date())
     }
 
-    // 특정 날짜의 DailyStatus isChecked 값을 변경하는 함수
+    // 특정 날짜의 DailyStatus isChecked 값을 변경하는 함수 (트랜잭션 사용)
     fun toggleDailyStatus(
         habitId: String,
         userId: String,
@@ -251,51 +251,32 @@ class HabitRepository {
 
         val dailyStatusRef = habitRef.collection("dailyStatus").document(date)
 
-        dailyStatusRef.get()
-            .addOnSuccessListener { snapshot ->
-                if (snapshot.exists()) {
-                    // 기존 DailyStatus 객체 가져오기
-                    val currentStatus = snapshot.toObject(DailyStatus::class.java)
-                    println("HabitRepository: CurrentDailyStatus: $currentStatus")
-                    if (currentStatus != null) {
-                        // isChecked 값 반전
-                        val updatedStatus = currentStatus.copy(isChecked = !currentStatus.isChecked)
-                        println("HabitRepository: UpdatedDailyStatus: $updatedStatus")
-
-                        // Firestore에 업데이트
-                        dailyStatusRef.set(updatedStatus)
-                            .addOnSuccessListener {
-                                println("HabitRepository: toggleDailyStatus succeeded")
-                                onComplete(true)
-                            }
-                            .addOnFailureListener { exception ->
-                                println("HabitRepository: toggleDailyStatus failed: ${exception.message}")
-                                onComplete(false)
-                            }
-                    } else {
-                        println("HabitRepository: toggleDailyStatus failed: currentStatus is null")
-                        onComplete(false)
-                    }
+        db.runTransaction { transaction ->
+            val snapshot = transaction.get(dailyStatusRef)
+            if (snapshot.exists()) {
+                val currentStatus = snapshot.toObject(DailyStatus::class.java)
+                println("HabitRepository: CurrentStatus before toggle: $currentStatus")
+                if (currentStatus != null) {
+                    val updatedStatus = currentStatus.copy(isChecked = !currentStatus.isChecked)
+                    transaction.set(dailyStatusRef, updatedStatus)
+                    println("HabitRepository: UpdatedStatus after toggle: $updatedStatus")
                 } else {
-                    // 상태가 없으면 초기화 후 저장
-                    val initialStatus = DailyStatus(date = date, isChecked = true)
-                    println("HabitRepository: DailyStatus does not exist, initializing with $initialStatus")
-                    dailyStatusRef.set(initialStatus)
-                        .addOnSuccessListener {
-                            println("HabitRepository: Initialized DailyStatus successfully")
-                            onComplete(true)
-                        }
-                        .addOnFailureListener { exception ->
-                            println("HabitRepository: Failed to initialize DailyStatus: ${exception.message}")
-                            onComplete(false)
-                        }
+                    throw Exception("HabitRepository: CurrentStatus is null")
                 }
+            } else {
+                // 상태가 없으면 초기화 (isChecked = true)
+                val initialStatus = DailyStatus(date = date, isChecked = true)
+                transaction.set(dailyStatusRef, initialStatus)
+                println("HabitRepository: toggleDailyStatus initialized with isChecked=true")
             }
-            .addOnFailureListener { exception ->
-                println("HabitRepository: Failed to get DailyStatus: ${exception.message}")
-                onComplete(false)
-            }
-
+            true
+        }.addOnSuccessListener {
+            println("HabitRepository: Transaction succeeded")
+            onComplete(true)
+        }.addOnFailureListener { e ->
+            println("HabitRepository: Transaction failed: ${e.message}")
+            onComplete(false)
+        }
     }
 
     // 연속 성공 계산
@@ -308,5 +289,76 @@ class HabitRepository {
         }
         println("HabitRepository: Calculated streak: $streak")
         return streak
+    }
+
+    // 실시간 업데이트 리스너 함수 추가
+    fun observeDailyStatuses(
+        habitId: String,
+        userId: String,
+        onResult: (List<DailyStatus>) -> Unit
+    ) {
+        val habitRef = db.collection("users")
+            .document(userId)
+            .collection("habits")
+            .document(habitId)
+
+        habitRef.collection("dailyStatus")
+            .orderBy("date")
+            .addSnapshotListener { snapshot, exception ->
+                if (exception != null) {
+                    println("HabitRepository: Failed to observe dailyStatuses: ${exception.message}")
+                    onResult(emptyList())
+                    return@addSnapshotListener
+                }
+
+                if (snapshot != null) {
+                    val dailyStatuses = snapshot.toObjects(DailyStatus::class.java)
+                    println("HabitRepository: Observed dailyStatuses: $dailyStatuses")
+                    onResult(dailyStatuses)
+                }
+            }
+    }
+
+    // 특정 날짜의 DailyStatus isChecked 값을 설정하는 함수
+    fun setDailyStatus(
+        habitId: String,
+        userId: String,
+        date: String,
+        isChecked: Boolean,
+        onComplete: (Boolean) -> Unit
+    ) {
+        val habitRef = db.collection("users")
+            .document(userId)
+            .collection("habits")
+            .document(habitId)
+
+        val dailyStatusRef = habitRef.collection("dailyStatus").document(date)
+
+        db.runTransaction { transaction ->
+            val snapshot = transaction.get(dailyStatusRef)
+            if (snapshot.exists()) {
+                val currentStatus = snapshot.toObject(DailyStatus::class.java)
+                println("HabitRepository: CurrentStatus before set: $currentStatus")
+                if (currentStatus != null) {
+                    val updatedStatus = currentStatus.copy(isChecked = isChecked)
+                    transaction.set(dailyStatusRef, updatedStatus)
+                    println("HabitRepository: UpdatedStatus after set: $updatedStatus")
+                } else {
+                    throw Exception("HabitRepository: CurrentStatus is null")
+                }
+            } else {
+                // 상태가 없으면 초기화
+                val initialStatus = DailyStatus(date = date, isChecked = isChecked)
+                transaction.set(dailyStatusRef, initialStatus)
+                println("HabitRepository: setDailyStatus initialized with isChecked=$isChecked")
+            }
+            true
+        }.addOnSuccessListener {
+            println("HabitRepository: setDailyStatus Transaction succeeded")
+            onComplete(true)
+        }.addOnFailureListener { e ->
+            println("HabitRepository: setDailyStatus Transaction failed: ${e.message}")
+            onComplete(false)
+        }
     }
 }

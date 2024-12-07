@@ -122,22 +122,23 @@ class HabitViewModel(
         }
     }
 
-    // 특정 날짜의 DailyStatus isChecked 값을 토글하는 함수
-    fun toggleDailyStatus(
+    // 특정 날짜의 DailyStatus isChecked 값을 설정하는 함수
+    fun setDailyStatus(
         habitId: String,
         userId: String,
         date: String,
+        isChecked: Boolean,
         onComplete: (Boolean) -> Unit
     ) {
         viewModelScope.launch {
-            println("HabitViewModel: Toggling DailyStatus for habitId: $habitId, date: $date")
-            habitRepository.toggleDailyStatus(habitId, userId, date) { success ->
+            println("HabitViewModel: Setting DailyStatus for habitId: $habitId, date: $date to isChecked=$isChecked")
+            habitRepository.setDailyStatus(habitId, userId, date, isChecked) { success ->
                 if (success) {
-                    println("HabitViewModel: toggleDailyStatus succeeded, reloading dailyStatuses.")
-                    // 연속 성공 횟수 업데이트
+                    println("HabitViewModel: setDailyStatus succeeded, reloading dailyStatuses.")
+                    // 최신 상태를 반영하기 위해 DailyStatus 재로드
                     loadDailyStatuses(habitId, userId)
                 } else {
-                    println("HabitViewModel: toggleDailyStatus failed.")
+                    println("HabitViewModel: setDailyStatus failed.")
                 }
                 onComplete(success)
             }
@@ -157,6 +158,13 @@ class HabitViewModel(
                     _errorMessage.value = "습관 상태 업데이트에 실패했습니다."
                 }
             }
+        }
+    }
+
+    // 실시간 업데이트 리스너 추가 함수
+    fun observeDailyStatuses(habitId: String, userId: String) {
+        habitRepository.observeDailyStatuses(habitId, userId) { statuses ->
+            _currentHabitDailyStatuses.value = statuses
         }
     }
 }

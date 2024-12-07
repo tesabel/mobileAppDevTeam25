@@ -11,6 +11,7 @@ import androidx.navigation.NavController
 import com.example.doordonot.auth.AuthViewModel
 import com.example.doordonot.model.Habit
 import com.example.doordonot.viewmodel.HabitViewModel
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -24,7 +25,7 @@ fun HabitDetailScreen(
     val user by authViewModel.currentUser.collectAsState()
     val currentHabit by habitViewModel.currentHabit.collectAsState()
 
-    // 유저나 habitId가 유효하지 않으면 리스트 화면으로 이동
+    // user와 habitId가 유효하지 않으면 리스트 화면으로 이동
     if (user == null || habitId.isBlank()) {
         LaunchedEffect(Unit) {
             println("HabitDetailScreen: Invalid user or habitId, navigating back to habit_list.")
@@ -35,45 +36,47 @@ fun HabitDetailScreen(
         return
     }
 
-    // 유저와 habitId가 유효하므로 Firestore에서 해당 습관 로드
-    LaunchedEffect(habitId, user!!.uid) {
-        println("HabitDetailScreen: Loading habit detail for habitId: $habitId, userId: ${user!!.uid}")
-        habitViewModel.loadHabit(habitId, user!!.uid)
-    }
-
-    Scaffold(
-        topBar = {
-            TopBarWithBackButton(
-                title = "습관 상세",
-                onBackClick = {
-                    println("HabitDetailScreen: Back button pressed, navigating back.")
-                    navController.popBackStack()
-                }
-            )
+    // user가 non-null임을 보장하는 let 블록
+    user?.let { nonNullUser ->
+        LaunchedEffect(habitId, nonNullUser.uid) {
+            println("HabitDetailScreen: Loading habit detail for habitId: $habitId, userId: ${nonNullUser.uid}")
+            habitViewModel.loadHabit(habitId, nonNullUser.uid)
         }
-    ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(16.dp)
-        ) {
-            // currentHabit 로딩 완료 여부에 따라 UI 변경
-            if (currentHabit != null) {
-                println("HabitDetailScreen: Habit loaded: ${currentHabit!!.name}, preparing UI...")
-                HabitDetailContent(
-                    habit = currentHabit!!,
-                    habitViewModel = habitViewModel,
-                    userId = user!!.uid
+
+        Scaffold(
+            topBar = {
+                TopBarWithBackButton(
+                    title = "습관 상세",
+                    onBackClick = {
+                        println("HabitDetailScreen: Back button pressed, navigating back.")
+                        navController.popBackStack()
+                    }
                 )
-            } else {
-                // currentHabit가 아직 null이면 로딩 스피너 표시
-                println("HabitDetailScreen: Habit not loaded yet, showing spinner.")
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        CircularProgressIndicator()
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(text = "습관 정보를 불러오는 중...")
+            }
+        ) { padding ->
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .padding(16.dp)
+            ) {
+                // currentHabit 로딩 완료 여부에 따라 UI 변경
+                if (currentHabit != null) {
+                    println("HabitDetailScreen: Habit loaded: ${currentHabit!!.name}, preparing UI...")
+                    HabitDetailContent(
+                        habit = currentHabit!!,
+                        habitViewModel = habitViewModel,
+                        userId = nonNullUser.uid
+                    )
+                } else {
+                    // currentHabit가 아직 null이면 로딩 스피너 표시
+                    println("HabitDetailScreen: Habit not loaded yet, showing spinner.")
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            CircularProgressIndicator()
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(text = "습관 정보를 불러오는 중...")
+                        }
                     }
                 }
             }
@@ -96,31 +99,39 @@ fun TopBarWithBackButton(title: String, onBackClick: () -> Unit) {
 }
 
 @Composable
-fun HabitDetailContent(habit: Habit, habitViewModel: HabitViewModel, userId: String) {
-    var isChecked by remember { mutableStateOf(false) }
-    var isLoading by remember { mutableStateOf(true) }
+fun HabitDetailContent(
+    habit: Habit,
+    habitViewModel: HabitViewModel,
+    userId: String
+) {
+    // ViewModel의 DailyStatus 목록을 상태로 관찰
+    val dailyStatuses by habitViewModel.currentHabitDailyStatuses.collectAsState()
     val currentDate = getCurrentDate()
+    val todayStatus = dailyStatuses.find { it.date == currentDate }
 
-    // DailyStatus를 초기화하고 로딩하는 LaunchedEffect
+    // 실시간 업데이트 리스너 설정
+    LaunchedEffect(habit.id, userId) {
+        habitViewModel.observeDailyStatuses(habit.id, userId)
+    }
+
+    // DailyStatus 초기화 필요 시 ViewModel 호출
     LaunchedEffect(habit.id, userId, currentDate) {
-        println("HabitDetailContent: Loading DailyStatus for habitId: ${habit.id}, date: $currentDate")
-        habitViewModel.getOrInitializeDailyStatus(
-            habit.id,
-            userId,
-            currentDate
-        ) { dailyStatus ->
-            if (dailyStatus != null) {
-                isChecked = dailyStatus.isChecked
-                println("HabitDetailContent: DailyStatus loaded, isChecked = ${dailyStatus.isChecked}")
-            } else {
-                println("HabitDetailContent: DailyStatus is null, setting isChecked to false")
-                isChecked = false
-            }
-            isLoading = false
+        if (todayStatus == null) {
+            habitViewModel.getOrInitializeDailyStatus(
+                habit.id,
+                userId,
+                currentDate
+            ) {}
         }
     }
 
-    println("HabitDetailContent: Rendering with isChecked = $isChecked, isLoading = $isLoading")
+    // 로딩 상태 및 체크 여부를 ViewModel의 상태로부터 파생
+    val isLoading = todayStatus == null
+    val isChecked = todayStatus?.isChecked ?: false
+
+    // Snackbar 상태 관리
+    val snackbarHostState = remember { SnackbarHostState() }
+    val coroutineScope = rememberCoroutineScope()
 
     Column(modifier = Modifier.fillMaxSize()) {
         Text(text = "습관 이름: ${habit.name}", style = MaterialTheme.typography.titleLarge)
@@ -132,40 +143,69 @@ fun HabitDetailContent(habit: Habit, habitViewModel: HabitViewModel, userId: Str
         Text(text = "타입: ${habit.type.name}", style = MaterialTheme.typography.bodyMedium)
         Spacer(modifier = Modifier.height(16.dp))
 
-        Row(verticalAlignment = Alignment.CenterVertically) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+            modifier = Modifier.fillMaxWidth()
+        ) {
             Text(text = "오늘 체크 여부", style = MaterialTheme.typography.titleMedium)
-            Spacer(modifier = Modifier.width(16.dp))
 
-            if (isLoading) {
-                CircularProgressIndicator(
-                    modifier = Modifier
-                        .size(24.dp)
-                        .padding(end = 8.dp),
-                    strokeWidth = 2.dp
-                )
-            }
-
-            Checkbox(
-                checked = isChecked,
-                enabled = !isLoading,
-                onCheckedChange = { checked ->
-                    println("HabitDetailContent: Checkbox clicked: $checked")
-                    isChecked = checked
-                    habitViewModel.toggleDailyStatus(
-                        habitId = habit.id,
-                        userId = userId,
-                        date = currentDate
-                    ) { success ->
-                        if (!success) {
-                            println("HabitDetailContent: Failed to toggleDailyStatus, reverting isChecked")
-                            isChecked = !checked
-                        } else {
-                            println("HabitDetailContent: toggleDailyStatus succeeded")
+            Row {
+                Button(
+                    onClick = {
+                        println("HabitDetailContent: '완료' 버튼 클릭")
+                        habitViewModel.setDailyStatus(
+                            habitId = habit.id,
+                            userId = userId,
+                            date = currentDate,
+                            isChecked = true
+                        ) { success ->
+                            coroutineScope.launch {
+                                if (success) {
+                                    println("HabitDetailContent: '완료' 설정 성공")
+                                    snackbarHostState.showSnackbar("습관 완료로 설정되었습니다.")
+                                } else {
+                                    println("HabitDetailContent: '완료' 설정 실패")
+                                    snackbarHostState.showSnackbar("습관 완료 설정에 실패했습니다.")
+                                }
+                            }
                         }
-                    }
+                    },
+                    enabled = !isLoading && !isChecked, // 이미 완료된 경우 비활성화
+                    modifier = Modifier.padding(end = 8.dp)
+                ) {
+                    Text(text = "완료")
                 }
-            )
+
+                Button(
+                    onClick = {
+                        println("HabitDetailContent: '실패' 버튼 클릭")
+                        habitViewModel.setDailyStatus(
+                            habitId = habit.id,
+                            userId = userId,
+                            date = currentDate,
+                            isChecked = false
+                        ) { success ->
+                            coroutineScope.launch {
+                                if (success) {
+                                    println("HabitDetailContent: '실패' 설정 성공")
+                                    snackbarHostState.showSnackbar("습관 실패로 설정되었습니다.")
+                                } else {
+                                    println("HabitDetailContent: '실패' 설정 실패")
+                                    snackbarHostState.showSnackbar("습관 실패 설정에 실패했습니다.")
+                                }
+                            }
+                        }
+                    },
+                    enabled = !isLoading && !isChecked, // 아직 완료되지 않은 경우 비활성화
+                ) {
+                    Text(text = "실패")
+                }
+            }
         }
+
+        // Snackbar 호스팅
+        SnackbarHost(hostState = snackbarHostState, modifier = Modifier.padding(top = 16.dp))
     }
 }
 
