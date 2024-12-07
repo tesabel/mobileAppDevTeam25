@@ -1,3 +1,4 @@
+// com.example.doordonot.habit.HabitListScreen.kt
 package com.example.doordonot.habit
 
 import androidx.compose.foundation.clickable
@@ -60,7 +61,9 @@ fun HabitListScreen(
                         .padding(16.dp)
                 ) {
                     items(habits) { habit ->
-                        HabitItem(habit = habit, onClick = { /* 상세 화면으로 이동 */ })
+                        HabitItem(habit = habit, onClick = {
+                            navController.navigate("habit_detail/${habit.id}")
+                        })
                         Spacer(modifier = Modifier.height(8.dp))
                     }
                 }
