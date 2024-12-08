@@ -1,5 +1,6 @@
 package com.example.doordonot.model
 
+import android.util.Log
 import com.google.android.gms.tasks.Tasks
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.QuerySnapshot
@@ -209,16 +210,25 @@ class HabitRepository {
         return streak
     }
 
-    // 드롭
-    suspend fun updateHabitType(habitId: String, newType: String, callback: (Boolean) -> Unit) {
-        try {
-            // 타입 업데이트
-            val habitRef = db.collection("habits").document(habitId)
+    suspend fun updateHabitType(
+        habitId: String,
+        userId: String,
+        newType: String
+    ): Boolean {
+        return try {
+            // 예시: Firestore 업데이트
+            val habitRef = db.collection("users")
+                .document(userId)
+                .collection("habits")
+                .document(habitId)
+
             habitRef.update("type", newType).await()
-            callback(true)
+            true
         } catch (e: Exception) {
-            callback(false)
+            Log.e("HabitRepository", "Error updating habit type", e)
+            false
         }
     }
+
 
 }

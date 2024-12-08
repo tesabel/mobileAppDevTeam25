@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.doordonot.model.DailyStatus
 import com.example.doordonot.model.Habit
 import com.example.doordonot.model.HabitRepository
+import com.example.doordonot.model.HabitType
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -129,18 +130,31 @@ class HabitViewModel(
     }
 
     //드롭
-    fun updateHabitType(habitId: String, userId: String, newType: String) {
+    fun updateHabitType(
+        habitId: String,
+        userId: String,
+        newType: String,
+        onComplete: (Boolean) -> Unit = {}
+    ) {
         viewModelScope.launch {
-            habitRepository.updateHabitType(habitId, newType) { success ->
-                if (success) {
-                    // If update is successful, refresh the habits list to reflect the changes
-                    loadHabits(userId)
-                } else {
-                    // Handle failure (you can show an error message or log it)
-                    Log.e("HabitViewModel", "Failed to update habit type")
+            try {
+                // Repository를 통해 데이터 업데이트
+                val isSuccess = habitRepository.updateHabitType(habitId, userId, newType)
+                if (isSuccess) {
+                    // 업데이트 성공 시 ViewModel 내 상태도 갱신
+                    _habits.value = _habits.value.map { habit ->
+                        if (habit.id == habitId) habit.copy(type = HabitType.valueOf(newType))
+                        else habit
+                    }
                 }
+                onComplete(isSuccess)
+            } catch (e: Exception) {
+                // 에러 처리
+                Log.e("HabitViewModel", "Failed to update habit type", e)
+                onComplete(false)
             }
         }
     }
+
 
 }
