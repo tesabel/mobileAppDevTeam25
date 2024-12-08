@@ -1,3 +1,5 @@
+//HabitRepository
+
 package com.example.doordonot.model
 
 import android.util.Log
@@ -5,6 +7,8 @@ import com.google.android.gms.tasks.Tasks
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.QuerySnapshot
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.tasks.await
+import java.time.LocalDate
 
 class HabitRepository {
     private val db = FirebaseFirestore.getInstance()
@@ -30,7 +34,8 @@ class HabitRepository {
     }
 
     // 습관 목록 가져오기
-    fun getHabits(userId: String, onResult: (List<Habit>) -> Unit) {
+    fun getHabits(userId: String,
+                  onResult: (List<Habit>) -> Unit) {
         db.collection("users")
             .document(userId)
             .collection("habits")
@@ -46,6 +51,79 @@ class HabitRepository {
             .addOnFailureListener { exception ->
                 println("HabitRepository: Failed to get habits: ${exception.message}")
                 onResult(emptyList())
+            }
+    }
+    //날짜로 가져오기
+    fun getHabitsForDate(
+        userId: String,
+        selectedDate: String,
+        onResult: (List<Habit>) -> Unit,
+        onError: (String) -> Unit
+    ) {
+        val userRef = db.collection("users").document(userId).collection("habits")
+
+        userRef.get()
+            .addOnSuccessListener { habitsSnapshot ->
+                val habitsForDate = mutableListOf<Habit>()
+                val tasks: MutableList<com.google.android.gms.tasks.Task<*>> = mutableListOf()
+
+                for (habitDoc in habitsSnapshot.documents) {
+                    val habit = habitDoc.toObject(Habit::class.java)
+                    if (habit != null) {
+                        val dailyStatusRef = habitDoc.reference.collection("dailyStatus").document(selectedDate)
+
+                        val task = dailyStatusRef.get()
+                            .addOnSuccessListener { dailyStatusSnapshot ->
+                                if (dailyStatusSnapshot.exists()) {
+                                    val dailyStatus = dailyStatusSnapshot.toObject(DailyStatus::class.java)
+                                    if (dailyStatus?.isChecked == true) {
+                                        habitsForDate.add(habit)
+                                    }
+                                } else {
+                                    // DailyStatus 없을 경우 초기 상태 생성
+                                    habitDoc.reference.get()
+                                        .addOnSuccessListener { habitSnapshot ->
+                                            val fetchedHabit = habitSnapshot.toObject(Habit::class.java)
+                                            if (fetchedHabit != null) {
+                                                val initialStatus = if (fetchedHabit.type == HabitType.MAINTAIN) {
+                                                    DailyStatus(date = selectedDate, isChecked = true)
+                                                } else {
+                                                    DailyStatus(date = selectedDate, isChecked = false)
+                                                }
+                                                dailyStatusRef.set(initialStatus)
+                                                    .addOnSuccessListener {
+                                                        if (initialStatus.isChecked) {
+                                                            habitsForDate.add(habit)
+                                                        }
+                                                    }
+                                                    .addOnFailureListener {
+                                                        println("Failed to initialize DailyStatus for habit: ${fetchedHabit.name}")
+                                                    }
+                                            }
+                                        }
+                                        .addOnFailureListener {
+                                            println("Failed to fetch habit details for habit ID: ${habit.id}")
+                                        }
+                                }
+                            }
+                            .addOnFailureListener {
+                                println("Failed to fetch dailyStatus for habit ID: ${habit.id}")
+                            }
+
+                        tasks.add(task)
+                    }
+                }
+
+                Tasks.whenAllComplete(tasks)
+                    .addOnSuccessListener {
+                        onResult(habitsForDate)
+                    }
+                    .addOnFailureListener { e ->
+                        onError("Failed to fetch habits for date $selectedDate: ${e.message}")
+                    }
+            }
+            .addOnFailureListener { e ->
+                onError("Failed to fetch habits for user: ${e.message}")
             }
     }
 
@@ -72,24 +150,12 @@ class HabitRepository {
                     .addOnSuccessListener { snapshot ->
                         val streak = calculateStreak(snapshot)
                         habitRef.update("streak", streak)
-                            .addOnSuccessListener {
-                                println("HabitRepository: Streak updated to $streak")
-                                onComplete(true)
-                            }
-                            .addOnFailureListener { exception ->
-                                println("HabitRepository: Failed to update streak: ${exception.message}")
-                                onComplete(false)
-                            }
+                            .addOnSuccessListener { onComplete(true) }
+                            .addOnFailureListener { onComplete(false) }
                     }
-                    .addOnFailureListener { exception ->
-                        println("HabitRepository: Failed to get daily statuses for streak calculation: ${exception.message}")
-                        onComplete(false)
-                    }
+                    .addOnFailureListener { onComplete(false) }
             }
-            .addOnFailureListener { exception ->
-                println("HabitRepository: Failed to update DailyStatus: ${exception.message}")
-                onComplete(false)
-            }
+            .addOnFailureListener { onComplete(false) }
     }
 
     // 날짜별 습관 조회

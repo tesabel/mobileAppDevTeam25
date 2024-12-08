@@ -1,3 +1,4 @@
+//HabitViewModel.kt
 package com.example.doordonot.viewmodel
 
 import android.util.Log
@@ -10,6 +11,7 @@ import com.example.doordonot.model.HabitType
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import java.time.LocalDate
 
 class HabitViewModel(
     private val habitRepository: HabitRepository = HabitRepository()
@@ -28,6 +30,9 @@ class HabitViewModel(
 
     private val _errorMessage = MutableStateFlow("")
     val errorMessage: StateFlow<String> = _errorMessage
+
+    private val _selectedDateHabits = MutableStateFlow<List<Habit>>(emptyList())
+    val selectedDateHabits: StateFlow<List<Habit>> = _selectedDateHabits
 
     // 습관 추가
     fun addHabit(habit: Habit, userId: String, onComplete: () -> Unit) {
@@ -61,12 +66,25 @@ class HabitViewModel(
                             _habits.value = updatedHabits
                         }
                     } else {
-                        println("HabitViewModel: 오늘 날짜의 습관 상태 초기화에 실패했습니다.")
                         _errorMessage.value = "오늘 날짜의 습관 상태 초기화에 실패했습니다."
                     }
                 }
             }
         }
+    }
+    fun loadHabitsForDate(userId: String, selectedDate: LocalDate) {
+        val dateString = selectedDate.toString() // yyyy-MM-dd 형식
+
+        habitRepository.getHabitsForDate(
+            userId = userId,
+            selectedDate = dateString,
+            onResult = { habitsForDate ->
+                _selectedDateHabits.value = habitsForDate
+            },
+            onError = { errorMessage ->
+                _errorMessage.value = errorMessage
+            }
+        )
     }
 
     // 특정 습관 로드
@@ -84,6 +102,7 @@ class HabitViewModel(
             }
         }
     }
+
 
     // 특정 습관의 DailyStatus 로드
     fun loadDailyStatuses(habitId: String, userId: String) {
