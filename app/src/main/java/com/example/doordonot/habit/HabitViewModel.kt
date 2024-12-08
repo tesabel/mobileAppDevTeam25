@@ -1,10 +1,12 @@
 package com.example.doordonot.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.doordonot.model.DailyStatus
 import com.example.doordonot.model.Habit
 import com.example.doordonot.model.HabitRepository
+import com.example.doordonot.model.HabitType
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch

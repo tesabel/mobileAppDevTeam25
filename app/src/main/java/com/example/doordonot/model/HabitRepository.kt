@@ -1,8 +1,10 @@
 package com.example.doordonot.model
 
+import android.util.Log
 import com.google.android.gms.tasks.Tasks
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.QuerySnapshot
+import kotlinx.coroutines.tasks.await
 
 class HabitRepository {
     private val db = FirebaseFirestore.getInstance()
