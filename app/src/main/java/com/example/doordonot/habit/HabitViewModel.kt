@@ -1,13 +1,10 @@
-// com.example.doordonot.viewmodel.HabitViewModel.kt
 package com.example.doordonot.viewmodel
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.doordonot.model.DailyStatus
 import com.example.doordonot.model.Habit
 import com.example.doordonot.model.HabitRepository
-import com.example.doordonot.model.HabitType
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -35,9 +32,11 @@ class HabitViewModel(
         viewModelScope.launch {
             habitRepository.addHabit(habit, userId) { success ->
                 if (success) {
+                    println("HabitViewModel: Habit added successfully.")
                     loadHabits(userId)
                     onComplete()
                 } else {
+                    println("HabitViewModel: Failed to add habit.")
                     _errorMessage.value = "습관 등록에 실패했습니다."
                 }
             }
@@ -48,16 +47,19 @@ class HabitViewModel(
     fun loadHabits(userId: String) {
         viewModelScope.launch {
             habitRepository.getHabits(userId) { habitsList ->
+                println("HabitViewModel: Loaded habits: $habitsList")
                 _habits.value = habitsList
                 // 오늘 날짜의 DailyStatus 초기화
                 habitRepository.initializeTodayDailyStatuses(userId) { success ->
                     if (success) {
-                        println("오늘 날짜의 DailyStatus 초기화 성공")
+                        println("HabitViewModel: 오늘 날짜의 DailyStatus 초기화 성공")
                         // streak 업데이트를 위해 습관 다시 로드
                         habitRepository.getHabits(userId) { updatedHabits ->
+                            println("HabitViewModel: Reloaded habits after initializing DailyStatus.")
                             _habits.value = updatedHabits
                         }
                     } else {
+                        println("HabitViewModel: 오늘 날짜의 습관 상태 초기화에 실패했습니다.")
                         _errorMessage.value = "오늘 날짜의 습관 상태 초기화에 실패했습니다."
                     }
                 }
@@ -71,8 +73,10 @@ class HabitViewModel(
             habitRepository.getHabits(userId) { habitsList ->
                 val habit = habitsList.find { it.id == habitId }
                 if (habit != null) {
+                    println("HabitViewModel: Found habit: $habit")
                     _currentHabit.value = habit
                 } else {
+                    println("HabitViewModel: 해당 습관 정보를 찾을 수 없습니다.")
                     _errorMessage.value = "해당 습관 정보를 찾을 수 없습니다."
                 }
             }
@@ -83,6 +87,7 @@ class HabitViewModel(
     fun loadDailyStatuses(habitId: String, userId: String) {
         viewModelScope.launch {
             habitRepository.getDailyStatuses(habitId, userId) { statuses ->
+                println("HabitViewModel: Loaded dailyStatuses: $statuses")
                 _currentHabitDailyStatuses.value = statuses
             }
         }
@@ -98,6 +103,7 @@ class HabitViewModel(
         viewModelScope.launch {
             habitRepository.getOrInitializeDailyStatus(habitId, userId, date) { status ->
                 if (status != null) {
+                    println("HabitViewModel: Retrieved DailyStatus: $status")
                     // 상태 업데이트
                     val updatedStatuses = _currentHabitDailyStatuses.value.toMutableList()
                     val index = updatedStatuses.indexOfFirst { it.date == date }
@@ -109,8 +115,32 @@ class HabitViewModel(
                     _currentHabitDailyStatuses.value = updatedStatuses
                     onResult(status)
                 } else {
+                    println("HabitViewModel: Failed to retrieve or initialize DailyStatus.")
                     onResult(null)
                 }
+            }
+        }
+    }
+
+    // 특정 날짜의 DailyStatus isChecked 값을 설정하는 함수
+    fun setDailyStatus(
+        habitId: String,
+        userId: String,
+        date: String,
+        isChecked: Boolean,
+        onComplete: (Boolean) -> Unit
+    ) {
+        viewModelScope.launch {
+            println("HabitViewModel: Setting DailyStatus for habitId: $habitId, date: $date to isChecked=$isChecked")
+            habitRepository.setDailyStatus(habitId, userId, date, isChecked) { success ->
+                if (success) {
+                    println("HabitViewModel: setDailyStatus succeeded, reloading dailyStatuses.")
+                    // 최신 상태를 반영하기 위해 DailyStatus 재로드
+                    loadDailyStatuses(habitId, userId)
+                } else {
+                    println("HabitViewModel: setDailyStatus failed.")
+                }
+                onComplete(success)
             }
         }
     }
@@ -120,12 +150,21 @@ class HabitViewModel(
         viewModelScope.launch {
             habitRepository.updateDailyStatus(habitId, userId, dailyStatus) { success ->
                 if (success) {
+                    println("HabitViewModel: updateDailyStatus succeeded, reloading dailyStatuses.")
                     // 상태 업데이트 성공 시 다시 로드
                     loadDailyStatuses(habitId, userId)
                 } else {
+                    println("HabitViewModel: updateDailyStatus failed.")
                     _errorMessage.value = "습관 상태 업데이트에 실패했습니다."
                 }
             }
+        }
+    }
+
+    // 실시간 업데이트 리스너 추가 함수
+    fun observeDailyStatuses(habitId: String, userId: String) {
+        habitRepository.observeDailyStatuses(habitId, userId) { statuses ->
+            _currentHabitDailyStatuses.value = statuses
         }
     }
 
