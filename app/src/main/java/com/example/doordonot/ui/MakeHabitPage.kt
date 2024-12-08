@@ -3,6 +3,7 @@ package com.example.doordonot.ui
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -18,6 +19,7 @@ import com.example.doordonot.model.HabitType
 import com.example.doordonot.ui.components.TopBar
 import com.example.doordonot.viewmodel.HabitViewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MakeHabitPage(
     navController: NavController,
@@ -61,17 +63,27 @@ fun MakeHabitPage(
             ) {
                 // 습관 이름 입력
                 Text(text = "습관 이름", style = MaterialTheme.typography.titleMedium)
+                Spacer(modifier = Modifier.height(4.dp))
                 TextField(
                     value = habitName,
                     onValueChange = { habitName = it },
                     placeholder = { Text("습관 이름을 입력하세요") },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = TextFieldDefaults.textFieldColors(
+                        // backgroundColor = Color.White,
+                        focusedIndicatorColor = Color.Transparent,
+                        unfocusedIndicatorColor = Color.Transparent,
+                        focusedLabelColor = Color.Gray,
+                        unfocusedLabelColor = Color.Gray
+                    ),
+                    shape = RoundedCornerShape(16.dp) // 둥근 모서리
                 )
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(20.dp))
 
                 // 습관 유형 선택
                 Text(text = "습관 유형", style = MaterialTheme.typography.titleMedium)
+                Spacer(modifier = Modifier.height(4.dp))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceEvenly
@@ -114,10 +126,11 @@ fun MakeHabitPage(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(20.dp))
 
                 // 카테고리 분류 드롭다운
                 Text(text = "카테고리 분류", style = MaterialTheme.typography.titleMedium)
+                Spacer(modifier = Modifier.height(4.dp))
                 Box {
                     Text(
                         text = if (selectedCategories.isEmpty()) "카테고리 선택" else selectedCategories.joinToString(", "),
@@ -155,20 +168,29 @@ fun MakeHabitPage(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(20.dp))
 
                 // 유지 중인 습관 전환 일수 입력 (형성중인 습관일 때만)
                 if (isForming) {
                     Text(text = "유지 중인 습관 전환 일수", style = MaterialTheme.typography.titleMedium)
+                    Spacer(modifier = Modifier.height(4.dp))
                     TextField(
                         value = transitionDays,
                         onValueChange = { transitionDays = it.filter { char -> char.isDigit() } },
                         placeholder = { Text("일수를 입력하세요") },
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = TextFieldDefaults.textFieldColors(
+                            // backgroundColor = Color.White,
+                            focusedIndicatorColor = Color.Transparent,
+                            unfocusedIndicatorColor = Color.Transparent,
+                            focusedLabelColor = Color.Gray,
+                            unfocusedLabelColor = Color.Gray
+                        ),
+                        shape = RoundedCornerShape(16.dp) // 둥근 모서리
                     )
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(20.dp))
 
                 // 확인 버튼
                 Button(

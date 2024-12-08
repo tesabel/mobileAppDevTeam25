@@ -34,6 +34,7 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.example.doordonot.R
 import com.example.doordonot.auth.AuthViewModel
 import com.example.doordonot.model.DailyStatus
 import com.example.doordonot.model.HabitType
@@ -60,7 +61,11 @@ fun HabitManagementPage(
             topBar = { TopBar(title = "습관 관리") },
             bottomBar = { BottomNavigationBar(navController) },
             floatingActionButton = {
-                FloatingActionButton(onClick = { navController.navigate("make_habit") }) {
+                FloatingActionButton(
+                    onClick = { navController.navigate("make_habit") },
+                    containerColor = colorResource(id = R.color.blue),
+                    contentColor = colorResource(id = R.color.white),
+                ) {
                     Icon(imageVector = Icons.Default.Add, contentDescription = "add")
                 }
             }
@@ -77,6 +82,7 @@ fun HabitManagementPage(
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
+                       // .background(colorResource(id = R.color.beige))
                         .padding(padding)
                         .padding(4.dp)
                 ) {
@@ -155,8 +161,8 @@ fun List(
                     color = Color.White,
                     modifier = Modifier
                         .background(
-                            if (title == "형성 중인 습관") Color(248, 84, 83, 255)
-                            else Color(13, 146, 244)
+                            if (title == "형성 중인 습관") colorResource(id = R.color.do_habit)
+                            else colorResource(id = R.color.donot_habit)
                         )
                         .padding(horizontal = 8.dp)
                         .fillMaxWidth()
@@ -195,6 +201,9 @@ fun DisplayingList(
             modifier = Modifier
                 .padding(vertical = 8.dp)
                 .fillMaxSize(),
+            colors = CardDefaults.cardColors(
+              //  colorResource(id = R.color.beige)
+            )
         ) {
             Row(
                 modifier = Modifier.fillMaxSize(),
