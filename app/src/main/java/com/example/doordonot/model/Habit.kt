@@ -1,3 +1,5 @@
+//model/Habit
+
 package com.example.doordonot.model
 
 data class Habit(

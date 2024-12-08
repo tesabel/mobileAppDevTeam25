@@ -1,3 +1,5 @@
+//model/DailyStatus
+
 package com.example.doordonot.model
 
 data class DailyStatus(

@@ -1,3 +1,5 @@
+//model/HabitRepository
+
 package com.example.doordonot.model
 
 import android.util.Log
@@ -235,8 +237,7 @@ class HabitRepository {
 
     // Helper 함수: 현재 날짜 가져오기
     private fun getCurrentDate(): String {
-        val dateFormat = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
-        return dateFormat.format(java.util.Date())
+        return com.example.doordonot.Config.getCurrentDate() // Config를 사용하여 날짜 결정
     }
 
     // 특정 날짜의 DailyStatus isChecked 값을 변경하는 함수 (트랜잭션 사용)
