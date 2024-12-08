@@ -1,4 +1,4 @@
-package com.example.doordonot.viewmodel
+package com.example.doordonot.ui.calendar
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

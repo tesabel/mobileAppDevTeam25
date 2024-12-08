@@ -1,6 +1,6 @@
 // CalendarPage.kt
 
-package com.example.doordonot.ui
+package com.example.doordonot.ui.calendar
 
 import android.widget.CalendarView
 import androidx.compose.foundation.layout.*
@@ -15,10 +15,8 @@ import androidx.navigation.NavController
 import com.example.doordonot.auth.AuthViewModel
 import com.example.doordonot.ui.components.BottomNavigationBar
 import com.example.doordonot.ui.components.TopBar
-import com.example.doordonot.viewmodel.CalendarViewModel
 import com.example.doordonot.viewmodel.HabitViewModel
 import java.text.SimpleDateFormat
-import java.time.LocalDate
 import java.util.Locale
 
 @Composable
