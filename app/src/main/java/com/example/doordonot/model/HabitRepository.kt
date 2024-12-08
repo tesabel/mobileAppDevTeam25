@@ -1,8 +1,12 @@
+//HabitRepository
+
 package com.example.doordonot.model
 
 import com.google.android.gms.tasks.Tasks
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.QuerySnapshot
+import kotlinx.coroutines.tasks.await
+import java.time.LocalDate
 
 class HabitRepository {
     private val db = FirebaseFirestore.getInstance()
@@ -64,7 +68,7 @@ class HabitRepository {
             .addOnFailureListener { onComplete(false) }
     }
 
-    // 날짜별 습관 조회
+    // 특정 습관 날짜별 상태 조회
     fun getDailyStatuses(
         habitId: String,
         userId: String,
@@ -206,5 +210,65 @@ class HabitRepository {
             if (status.isChecked) streak++ else break
         }
         return streak
+    }
+
+    fun getHabitsForDate(
+        userId: String,
+        selectedDate: String,
+        onResult: (List<Habit>) -> Unit,
+        onError: (String) -> Unit
+    ) {
+        db.collection("users")
+            .document(userId)
+            .collection("habits")
+            .get()
+            .addOnSuccessListener { habitsSnapshot ->
+                val habitsForDate = mutableListOf<Habit>()
+                val tasks: MutableList<com.google.android.gms.tasks.Task<*>> = mutableListOf()
+
+                // 모든 습관에 대해 dailyStatus 확인
+                for (habitDoc in habitsSnapshot.documents) {
+                    val habit = habitDoc.toObject(Habit::class.java)
+                    if (habit != null) {
+                        val task = habitDoc.reference
+                            .collection("dailyStatus")
+                            .document(selectedDate)
+                            .get()
+                            .addOnSuccessListener { dailyStatusSnapshot ->
+                                val dailyStatus = dailyStatusSnapshot.toObject(DailyStatus::class.java)
+                                if (dailyStatus?.isChecked == true) {
+                                    habitsForDate.add(habit)
+                                }
+                            }
+                            .addOnFailureListener { e ->
+                                onError("Failed to fetch daily status for habit: ${e.message}")
+                            }
+                        tasks.add(task) // Task 추가
+                    }
+                }
+
+                // 모든 작업이 완료될 때 결과 반환
+                Tasks.whenAllComplete(tasks)
+                    .addOnSuccessListener {
+                        onResult(habitsForDate)
+                    }
+                    .addOnFailureListener { e ->
+                        onError("Error fetching habits: ${e.message}")
+                    }
+            }
+            .addOnFailureListener { e ->
+                onError("Failed to fetch habits: ${e.message}")
+            }
+    }
+    // 드롭
+    suspend fun updateHabitType(habitId: String, newType: String, callback: (Boolean) -> Unit) {
+        try {
+            // 타입 업데이트
+            val habitRef = db.collection("habits").document(habitId)
+            habitRef.update("type", newType).await()
+            callback(true)
+        } catch (e: Exception) {
+            callback(false)
+        }
     }
 }

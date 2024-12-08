@@ -13,12 +13,11 @@ import com.example.doordonot.habit.HabitListScreen
 import com.example.doordonot.setting.PrivacyPolicyPage
 import com.example.doordonot.setting.SettingsPage
 import com.example.doordonot.setting.TermsOfServicePage
-import com.example.doordonot.ui.calendar.CalendarViewModel
+import com.example.doordonot.calendar.CalendarViewModel
 import com.example.doordonot.viewmodel.HabitViewModel
 import com.example.doordonot.auth.AuthViewModel
 import com.example.doordonot.habit.AddHabitPage
-import com.example.doordonot.habit.HabitListScreen
-import com.example.doordonot.ui.calendar.CalendarPage
+import com.example.doordonot.calendar.CalendarPage
 import com.example.doordonot.ui.HabitManagementPage
 import com.example.doordonot.ui.MakeHabitPage
 

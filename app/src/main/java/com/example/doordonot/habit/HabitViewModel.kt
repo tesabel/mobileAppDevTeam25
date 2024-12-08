@@ -1,6 +1,7 @@
-// com.example.doordonot.viewmodel.HabitViewModel.kt
+//HabitViewModel.kt
 package com.example.doordonot.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.doordonot.model.DailyStatus
@@ -9,6 +10,7 @@ import com.example.doordonot.model.HabitRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import java.time.LocalDate
 
 class HabitViewModel(
     private val habitRepository: HabitRepository = HabitRepository()
@@ -27,6 +29,9 @@ class HabitViewModel(
 
     private val _errorMessage = MutableStateFlow("")
     val errorMessage: StateFlow<String> = _errorMessage
+
+    private val _selectedDateHabits = MutableStateFlow<List<Habit>>(emptyList())
+    val selectedDateHabits: StateFlow<List<Habit>> = _selectedDateHabits
 
     // 습관 추가
     fun addHabit(habit: Habit, userId: String, onComplete: () -> Unit) {
@@ -126,4 +131,34 @@ class HabitViewModel(
             }
         }
     }
+    fun loadHabitsForDate(userId: String, selectedDate: LocalDate) {
+        val dateString = selectedDate.toString() // yyyy-MM-dd 형식
+
+        habitRepository.getHabitsForDate(
+            userId = userId,
+            selectedDate = dateString,
+            onResult = { habitsForDate ->
+                _selectedDateHabits.value = habitsForDate
+            },
+            onError = { errorMessage ->
+                _errorMessage.value = errorMessage
+            }
+        )
+    }
+
+    fun updateHabitType(habitId: String, userId: String, newType: String) {
+        viewModelScope.launch {
+            habitRepository.updateHabitType(habitId, newType) { success ->
+                if (success) {
+                    // If update is successful, refresh the habits list to reflect the changes
+                    loadHabits(userId)
+                } else {
+                    // Handle failure (you can show an error message or log it)
+                    Log.e("HabitViewModel", "Failed to update habit type")
+                }
+            }
+        }
+    }
 }
+
+
