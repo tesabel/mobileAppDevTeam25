@@ -1,15 +1,19 @@
+//auth/AuthViewModel
+
 package com.example.doordonot.auth
 
+import User
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.doordonot.model.AuthRepository
-import com.example.doordonot.model.User
+import com.example.doordonot.model.HabitRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 class AuthViewModel(
-    private val authRepository: AuthRepository = AuthRepository()
+    private val authRepository: AuthRepository = AuthRepository(),
+    private val habitRepository: HabitRepository = HabitRepository()
 ) : ViewModel() {
 
     // UI 상태를 관리하는 StateFlow
@@ -30,6 +34,10 @@ class AuthViewModel(
 
     private val _currentUser = MutableStateFlow<User?>(null)
     val currentUser: StateFlow<User?> = _currentUser
+
+
+    private val _showDateAlert = MutableStateFlow<String?>(null)
+    val showDateAlert: StateFlow<String?> = _showDateAlert
 
     init {
         loadCurrentUser()
@@ -95,8 +103,11 @@ class AuthViewModel(
                 authRepository.signIn(_email.value, _password.value) { success ->
                     if (success) {
                         _errorMessage.value = ""
-                        loadCurrentUser()
-                        onSuccess() // 로그인 성공 시 콜백 호출
+                        // 로그인 성공 후 User 정보를 로드한 뒤 날짜 처리
+                        loadCurrentUser {
+                            handleDateUpdate() // 날짜 관련 처리 함수 호출
+                            onSuccess() // 화면 이동 등 처리
+                        }
                     } else {
                         _errorMessage.value = "로그인에 실패했습니다."
                     }
@@ -105,11 +116,95 @@ class AuthViewModel(
         }
     }
 
+    // 날짜 처리 함수
+    private fun handleDateUpdate() {
+        val user = _currentUser.value ?: return
+        val currentDate = com.example.doordonot.Config.getCurrentDate()
+        val lastUpdatedDate = user.lastUpdatedDate
+        val mode = if (com.example.doordonot.Config.useTestDate) "테스트모드" else "현재날짜모드"
+
+        // 반갑습니다! 알림 및 콘솔 출력
+        println("반갑습니다! 모드: $mode, 오늘날짜: $currentDate")
+
+        if (lastUpdatedDate.isBlank()) {
+            // lastUpdatedDate가 없으면 현재 날짜로 설정
+            updateUserLastUpdatedDate(currentDate)
+            _showDateAlert.value = "반갑습니다!\n모드: $mode\n오늘날짜: $currentDate"
+        } else {
+            if (lastUpdatedDate != currentDate) {
+                // 날짜가 다르면 updateDate 실행
+                updateDate(lastUpdatedDate, currentDate, mode)
+            } else {
+                // 날짜가 같으면 기본 환영메시지만
+                _showDateAlert.value = "반갑습니다!\n모드: $mode\n오늘날짜: $currentDate"
+            }
+        }
+    }
+
+
+    // 날짜 갱신 함수
+// auth/AuthViewModel.kt
+
+// updateDate 함수 내 사이 날짜 successDates 갱신 로직 추가
+// handleDateUpdate와 updateDate 함수 내에서 마지막 부분에 추가
+
+    private fun updateDate(oldDate: String, newDate: String, mode: String) {
+        val dateFormat = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
+        val old = dateFormat.parse(oldDate)
+        val new = dateFormat.parse(newDate)
+        val diff = ((new.time - old.time) / (1000 * 60 * 60 * 24)).toInt()
+
+        if (diff > 0) {
+            val alertMessage = "다시 돌아오셨군요! ${diff}일만에 접속하셨네요!"
+            println(alertMessage)
+            val calendar = java.util.Calendar.getInstance()
+            calendar.time = old
+            for (i in 1..diff) {
+                calendar.add(java.util.Calendar.DAY_OF_YEAR, 1)
+                val logDate = dateFormat.format(calendar.time)
+                println(logDate) // 각 날짜 콘솔로그로 출력
+            }
+
+            // 3. 모든 습관에 대해 successDates 업데이트
+            val user = _currentUser.value ?: return
+            viewModelScope.launch {
+                // lastUpdatedDate 변경 전에 사이 날짜 success 갱신
+                habitRepository.updateAllHabitsSuccessDates(user.uid, oldDate, newDate)
+
+                // lastUpdatedDate를 newDate로 갱신
+                updateUserLastUpdatedDate(newDate)
+            }
+
+            _showDateAlert.value = "반갑습니다!\n모드: $mode\n오늘날짜: $newDate\n$alertMessage"
+        } else {
+            _showDateAlert.value = "반갑습니다!\n모드: $mode\n오늘날짜: $newDate"
+        }
+    }
+
+    // lastUpdatedDate DB 업데이트 함수
+    private fun updateUserLastUpdatedDate(newDate: String) {
+        val user = _currentUser.value ?: return
+        authRepository.updateLastUpdatedDate(user.uid, newDate) { success ->
+            if (success) {
+                println("User lastUpdatedDate updated to $newDate")
+            } else {
+                println("Failed to update lastUpdatedDate")
+            }
+        }
+    }
+
+    // 알림 닫기 처리 함수 추가
+    fun onDateAlertDismissed() {
+        _showDateAlert.value = null
+    }
+
+
     // 현재 사용자 정보 로드
-    fun loadCurrentUser() {
+    fun loadCurrentUser(onLoaded: (() -> Unit)? = null) {
         viewModelScope.launch {
             authRepository.getCurrentUser { user ->
                 _currentUser.value = user
+                onLoaded?.invoke()
             }
         }
     }

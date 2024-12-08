@@ -1,8 +1,12 @@
+//model/HabitRepository
+
 package com.example.doordonot.model
 
+import android.util.Log
 import com.google.android.gms.tasks.Tasks
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.QuerySnapshot
+import kotlinx.coroutines.tasks.await
 
 class HabitRepository {
     private val db = FirebaseFirestore.getInstance()
@@ -231,10 +235,135 @@ class HabitRepository {
             }
     }
 
+    // 2. successDates와 totalSuccessCount, streak를 업데이트하는 함수 추가
+    suspend fun updateHabitSuccessInfo(
+        userId: String,
+        habitId: String,
+        newSuccessDates: List<String>
+    ): Boolean {
+        return try {
+            // successDates를 기준으로 streak 계산
+            val newStreak = calculateStreakFromSuccessDates(newSuccessDates)
+            val newTotalSuccess = newSuccessDates.size
+
+            val habitRef = db.collection("users")
+                .document(userId)
+                .collection("habits")
+                .document(habitId)
+
+            val updates = mapOf(
+                "successDates" to newSuccessDates,
+                "totalSuccessCount" to newTotalSuccess,
+                "streak" to newStreak
+            )
+
+            habitRef.update(updates).await()
+            println("HabitRepository: updateHabitSuccessInfo succeeded. newStreak=$newStreak, newTotalSuccess=$newTotalSuccess")
+            true
+        } catch (e: Exception) {
+            println("HabitRepository: updateHabitSuccessInfo failed: ${e.message}")
+            false
+        }
+    }
+
+    // 2. successDates를 기반으로 streak 계산하는 로직 추가
+    private fun calculateStreakFromSuccessDates(successDates: List<String>): Int {
+        if (successDates.isEmpty()) return 0
+
+        // successDates를 날짜 오름차순 정렬 (yyyy-MM-dd 형식 가정)
+        val sorted = successDates.sorted()
+
+        // 오늘 날짜 제외하고 어제까지 연속 성공일수 계산
+        // 예: 오늘 날짜는 Config.getCurrentDate(), 오늘 아직 체크 안했다면 streak 깨지지 않고 유지
+        val currentDate = com.example.doordonot.Config.getCurrentDate()
+
+        // streak 계산: 현재날짜 이전 날부터 연속적으로 successDates에 존재하는지 확인
+        val dateFormat = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
+        val current = dateFormat.parse(currentDate)!!
+        val calendar = java.util.Calendar.getInstance()
+
+        // 어제부터 역으로 successDates에 있는지 확인
+        // 오늘 날짜가 successDates에 없더라도 streak가 끊기는건 아님(아직 안한것)
+        // 어제를 기준으로 계속 거슬러 올라가면서 연속성 체크
+        var streakCount = 0
+        calendar.time = current
+        // 어제로 이동
+        calendar.add(java.util.Calendar.DAY_OF_YEAR, -1)
+
+        while (true) {
+            val checkDate = dateFormat.format(calendar.time)
+            if (sorted.contains(checkDate)) {
+                streakCount++
+                calendar.add(java.util.Calendar.DAY_OF_YEAR, -1)
+            } else {
+                break
+            }
+        }
+        return streakCount
+    }
+
+    // 2. updateDate 로직에서 호출할 함수: lastUpdatedDate와 currentDate 사이 날짜 처리
+    // 유지중(MAINTAIN) 습관은 사이 날짜 모두 successDates에 추가 (없는 경우만)
+    // 형성중(FORMING) 습관은 사이 날짜 성공 없음
+    suspend fun updateAllHabitsSuccessDates(userId: String, lastUpdatedDate: String, currentDate: String) {
+        val habits = getHabitsSuspend(userId)
+        if (habits.isEmpty()) return
+
+        val dateFormat = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
+        val old = dateFormat.parse(lastUpdatedDate)!!
+        val new = dateFormat.parse(currentDate)!!
+
+        val diff = ((new.time - old.time) / (1000 * 60 * 60 * 24)).toInt()
+
+        // diff일만큼 사이 날짜 존재
+        // oldDate와 newDate 사이의 날짜: oldDate 다음날부터 newDate 전날까지
+        // 예: old: 2024-11-01, new: 2024-11-05
+        // 사이 날짜: 11-02, 11-03, 11-04
+
+        for (habit in habits) {
+            val updatedSuccessDates = habit.successDates.toMutableList()
+            if (diff > 1) {
+                // old와 new 사이 날짜 처리
+                val calendar = java.util.Calendar.getInstance()
+                calendar.time = old
+                for (i in 1 until diff) {
+                    calendar.add(java.util.Calendar.DAY_OF_YEAR, 1)
+                    val intermediateDate = dateFormat.format(calendar.time)
+
+                    // MAINTAIN 습관이라면 사이 날짜 모두 성공 처리(이미 있지 않다면 추가)
+                    if (habit.type == HabitType.MAINTAIN) {
+                        if (!updatedSuccessDates.contains(intermediateDate)) {
+                            updatedSuccessDates.add(intermediateDate)
+                        }
+                    }
+                    // FORMING 습관은 사이 날짜 추가 없음(실패로 간주)
+                }
+            }
+            // 업데이트된 successDates로 DB 갱신 및 streak 재계산
+            updateHabitSuccessInfo(userId, habit.id, updatedSuccessDates)
+        }
+    }
+
+    // suspend version of getHabits for convenience
+    private suspend fun getHabitsSuspend(userId: String): List<Habit> {
+        return try {
+            val snapshot = db.collection("users")
+                .document(userId)
+                .collection("habits")
+                .get()
+                .await()
+            snapshot.documents.mapNotNull { doc ->
+                val habit = doc.toObject(Habit::class.java)
+                habit?.copy(id = doc.id)
+            }
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
     // Helper 함수: 현재 날짜 가져오기
     private fun getCurrentDate(): String {
-        val dateFormat = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
-        return dateFormat.format(java.util.Date())
+        return com.example.doordonot.Config.getCurrentDate() // Config를 사용하여 날짜 결정
     }
 
     // 특정 날짜의 DailyStatus isChecked 값을 변경하는 함수 (트랜잭션 사용)
@@ -362,13 +491,13 @@ class HabitRepository {
         }
     }
 
+    //드롭-상태 업데이트
     suspend fun updateHabitType(
         habitId: String,
         userId: String,
         newType: String
     ): Boolean {
         return try {
-            // 예시: Firestore 업데이트
             val habitRef = db.collection("users")
                 .document(userId)
                 .collection("habits")
@@ -382,5 +511,40 @@ class HabitRepository {
         }
     }
 
+    fun observeHabits(userId: String, onResult: (List<Habit>) -> Unit) {
+        val habitsRef = FirebaseFirestore.getInstance().collection("users")
+            .document(userId).collection("habits")
+
+        habitsRef.addSnapshotListener { snapshot, exception ->
+            if (exception != null) {
+                Log.e("HabitRepository", "Failed to observe habits", exception)
+                return@addSnapshotListener
+            }
+
+            if (snapshot != null && !snapshot.isEmpty) {
+                val habits = snapshot.toObjects(Habit::class.java)
+                onResult(habits)
+            }
+        }
+    }
+
+
+    // 습관 삭제 함수
+    suspend fun deleteHabit(habitId: String, userId: String): Boolean {
+        val habitRef = FirebaseFirestore.getInstance()
+            .collection("users")
+            .document(userId)
+            .collection("habits")
+            .document(habitId)
+
+        return try {
+            habitRef.delete().await() // suspend 함수로 변경하여 작업 완료 대기
+            Log.d("HabitRepository", "습관 삭제 성공")
+            true
+        } catch (e: Exception) {
+            Log.e("HabitRepository", "습관 삭제 실패", e)
+            false
+        }
+    }
 
 }

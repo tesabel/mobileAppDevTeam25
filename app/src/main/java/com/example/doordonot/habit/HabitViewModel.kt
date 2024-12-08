@@ -1,10 +1,14 @@
+//habit/HabitViewModel
+
 package com.example.doordonot.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.doordonot.model.DailyStatus
 import com.example.doordonot.model.Habit
 import com.example.doordonot.model.HabitRepository
+import com.example.doordonot.model.HabitType
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -48,7 +52,7 @@ class HabitViewModel(
         viewModelScope.launch {
             habitRepository.getHabits(userId) { habitsList ->
                 println("HabitViewModel: Loaded habits: $habitsList")
-                _habits.value = habitsList
+                _habits.value = habitsList.toList()
                 // 오늘 날짜의 DailyStatus 초기화
                 habitRepository.initializeTodayDailyStatuses(userId) { success ->
                     if (success) {
@@ -195,5 +199,17 @@ class HabitViewModel(
         }
     }
 
+
+    // 습관 삭제 함수
+    fun deleteHabit(habitId: String, userId: String) {
+        viewModelScope.launch {
+            val isDeleted = habitRepository.deleteHabit(habitId, userId)
+            if (isDeleted) {
+                loadHabits(userId) // 삭제 후 습관 리스트 재로드
+            } else {
+                Log.e("HabitViewModel", "습관 삭제에 실패하여 리스트를 새로 로드하지 않음")
+            }
+        }
+    }
 
 }

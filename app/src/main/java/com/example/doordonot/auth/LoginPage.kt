@@ -1,3 +1,5 @@
+//auth/LoginPage
+
 package com.example.doordonot.auth
 
 import androidx.compose.foundation.layout.*
@@ -19,6 +21,28 @@ fun LoginPage(
     navController: NavController,
     authViewModel: AuthViewModel
 ) {
+    val showDateAlert by authViewModel.showDateAlert.collectAsState()
+
+    // 로그인 성공 후 날짜알림(AlertDialog)
+    if (showDateAlert != null) {
+        AlertDialog(
+            onDismissRequest = { },
+            title = { Text("반갑습니다!") },
+            text = { Text(showDateAlert!!) },
+            confirmButton = {
+                TextButton(onClick = {
+                    authViewModel.onDateAlertDismissed()
+                    // 알림을 닫고 캘린더로 이동
+                    navController.navigate("calendar") {
+                        popUpTo("login") { inclusive = true }
+                    }
+                }) {
+                    Text("확인")
+                }
+            }
+        )
+    }
+
     Scaffold(
         topBar = { TopBar(title = "로그인") }
     ) { padding ->
@@ -73,9 +97,6 @@ fun LoginPage(
             Button(
                 onClick = {
                     authViewModel.login {
-                        navController.navigate("calendar") { // 로그인 성공 시 캘린더 화면으로 이동
-                            popUpTo("login") { inclusive = true }
-                        }
                     }
                 },
                 modifier = Modifier.fillMaxWidth()

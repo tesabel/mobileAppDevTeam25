@@ -1,5 +1,8 @@
+//model/AuthRepository
+
 package com.example.doordonot.model
 
+import User
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 
@@ -11,7 +14,8 @@ class AuthRepository {
     fun signUp(name: String, email: String, password: String, onComplete: (Boolean) -> Unit) {
         auth.createUserWithEmailAndPassword(email, password).addOnCompleteListener { task ->
             if (task.isSuccessful) {
-                val user = User(auth.currentUser!!.uid, name)
+                val currentDate = com.example.doordonot.Config.getCurrentDate()
+                val user = User(auth.currentUser!!.uid, name, lastUpdatedDate = currentDate)
                 db.collection("users").document(user.uid).set(user).addOnSuccessListener {
                     onComplete(true)
                 }.addOnFailureListener {
@@ -21,6 +25,14 @@ class AuthRepository {
                 onComplete(false)
             }
         }
+    }
+
+    // lastUpdatedDate를 업데이트하는 함수
+    fun updateLastUpdatedDate(userId: String, newDate: String, onComplete: (Boolean) -> Unit) {
+        db.collection("users").document(userId)
+            .update("lastUpdatedDate", newDate)
+            .addOnSuccessListener { onComplete(true) }
+            .addOnFailureListener { onComplete(false) }
     }
 
     // 로그인

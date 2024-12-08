@@ -12,6 +12,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.runtime.*
@@ -26,6 +27,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntSize
@@ -252,13 +254,27 @@ fun DisplayingList(
                         style = typography.bodySmall
                     )
                 }
+
+
+                //-----------------------------체크박스 로직 -----------------------------------
                 Checkbox(
                     checked = dailyStatus.isChecked,
                     onCheckedChange = { isChecked ->
                         isCheckedToday = isChecked
                         dailyStatus = DailyStatus(date = today, isChecked = isChecked)
+                        //체크박스 선택 시 실행 함수
+                        viewModel.updateDailyStatus(habit.id, userId, dailyStatus) // DailyStatus 전달
                     }
                 )
+//---------------------------------------------------------------------
+
+
+                IconButton(onClick = {
+                    // 삭제 로직 추가
+                    viewModel.deleteHabit(habit.id, userId)
+                }) {
+                    Icon(imageVector = Icons.Default.Delete, contentDescription = "Delete Habit")
+                }
             }
         }
     }
@@ -378,7 +394,6 @@ fun <T> DropTarget(
 
     Box(
         modifier = modifier
-           // .background(if (isCurrentDropTarget) Color.Red.copy(alpha = 0.3f) else Color.Transparent)
             .onGloballyPositioned { coordinates ->
                 val rect = coordinates.boundsInWindow()
                 isCurrentDropTarget = rect.contains(dragPosition + dragOffset)
