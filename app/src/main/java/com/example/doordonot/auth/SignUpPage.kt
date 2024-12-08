@@ -3,11 +3,13 @@
 package com.example.doordonot.auth
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
@@ -16,6 +18,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.doordonot.ui.components.TopBar
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SignUpPage(
     navController: NavController,
@@ -45,7 +48,15 @@ fun SignUpPage(
                 modifier = Modifier.fillMaxWidth(),
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Text
-                )
+                ),
+                colors = TextFieldDefaults.textFieldColors(
+                    //backgroundColor = Color.White,
+                    focusedIndicatorColor = Color.Transparent,
+                    unfocusedIndicatorColor = Color.Transparent,
+                    focusedLabelColor = Color.Gray,
+                    unfocusedLabelColor = Color.Gray
+                ),
+                shape = RoundedCornerShape(16.dp) // 둥근 모서리
             )
             Spacer(modifier = Modifier.height(8.dp))
 
@@ -57,7 +68,15 @@ fun SignUpPage(
                 modifier = Modifier.fillMaxWidth(),
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Email
-                )
+                ),
+                colors = TextFieldDefaults.textFieldColors(
+                    //backgroundColor = Color.White,
+                    focusedIndicatorColor = Color.Transparent,
+                    unfocusedIndicatorColor = Color.Transparent,
+                    focusedLabelColor = Color.Gray,
+                    unfocusedLabelColor = Color.Gray
+                ),
+                shape = RoundedCornerShape(16.dp) // 둥근 모서리
             )
             Spacer(modifier = Modifier.height(8.dp))
 
@@ -70,7 +89,15 @@ fun SignUpPage(
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Password
                 ),
-                visualTransformation = PasswordVisualTransformation()
+                visualTransformation = PasswordVisualTransformation(),
+                colors = TextFieldDefaults.textFieldColors(
+                    //backgroundColor = Color.White,
+                    focusedIndicatorColor = Color.Transparent,
+                    unfocusedIndicatorColor = Color.Transparent,
+                    focusedLabelColor = Color.Gray,
+                    unfocusedLabelColor = Color.Gray
+                ),
+                shape = RoundedCornerShape(16.dp) // 둥근 모서리
             )
             Spacer(modifier = Modifier.height(8.dp))
 
@@ -83,7 +110,15 @@ fun SignUpPage(
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Password
                 ),
-                visualTransformation = PasswordVisualTransformation()
+                visualTransformation = PasswordVisualTransformation(),
+                colors = TextFieldDefaults.textFieldColors(
+                    //backgroundColor = Color.White,
+                    focusedIndicatorColor = Color.Transparent,
+                    unfocusedIndicatorColor = Color.Transparent,
+                    focusedLabelColor = Color.Gray,
+                    unfocusedLabelColor = Color.Gray
+                ),
+                shape = RoundedCornerShape(16.dp) // 둥근 모서리
             )
             Spacer(modifier = Modifier.height(8.dp))
 

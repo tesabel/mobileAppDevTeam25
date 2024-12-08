@@ -82,7 +82,7 @@ fun HabitManagementPage(
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                       // .background(colorResource(id = R.color.beige))
+                        //.background(colorResource(id = R.color.beige))
                         .padding(padding)
                         .padding(4.dp)
                 ) {
@@ -264,7 +264,7 @@ fun DisplayingList(
                     )
                 }
 
-
+Column {
                 //-----------------------------체크박스 로직 -----------------------------------
                 Checkbox(
                     checked = dailyStatus.isChecked,
@@ -284,6 +284,7 @@ fun DisplayingList(
                 }) {
                     Icon(imageVector = Icons.Default.Delete, contentDescription = "Delete Habit")
                 }
+}
             }
         }
     }
