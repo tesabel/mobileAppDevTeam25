@@ -67,6 +67,20 @@ class HabitViewModel(
             }
         }
     }
+    fun loadHabitsForDate(userId: String, selectedDate: LocalDate) {
+        val dateString = selectedDate.toString() // yyyy-MM-dd 형식
+
+        habitRepository.getHabitsForDate(
+            userId = userId,
+            selectedDate = dateString,
+            onResult = { habitsForDate ->
+                _selectedDateHabits.value = habitsForDate
+            },
+            onError = { errorMessage ->
+                _errorMessage.value = errorMessage
+            }
+        )
+    }
 
     // 특정 습관 로드
     fun loadHabit(habitId: String, userId: String) {
@@ -81,6 +95,7 @@ class HabitViewModel(
             }
         }
     }
+
 
     // 특정 습관의 DailyStatus 로드
     fun loadDailyStatuses(habitId: String, userId: String) {
@@ -131,20 +146,7 @@ class HabitViewModel(
             }
         }
     }
-    fun loadHabitsForDate(userId: String, selectedDate: LocalDate) {
-        val dateString = selectedDate.toString() // yyyy-MM-dd 형식
 
-        habitRepository.getHabitsForDate(
-            userId = userId,
-            selectedDate = dateString,
-            onResult = { habitsForDate ->
-                _selectedDateHabits.value = habitsForDate
-            },
-            onError = { errorMessage ->
-                _errorMessage.value = errorMessage
-            }
-        )
-    }
 
     fun updateHabitType(habitId: String, userId: String, newType: String) {
         viewModelScope.launch {

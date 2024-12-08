@@ -44,14 +44,11 @@ fun CalendarPage(
             }
         },bottomBar = { BottomNavigationBar(navController) }
     ) { innerPadding ->
-        val user = currentUser
-        if (user != null) {
-            LaunchedEffect(selectedDate, user.uid) {
-                // 선택된 날짜에 해당하는 습관 데이터 로드
-                habitViewModel.loadHabitsForDate(user.uid, selectedDate.toLocalDate())
-            }
-        }
-
+        if (currentUser != null)
+        { LaunchedEffect(selectedDate, currentUser!!.uid) {
+            // 선택된 날짜에 해당하는 습관 데이터 로드
+            habitViewModel.loadHabitsForDate(currentUser!!.uid, selectedDate.toLocalDate())
+        }}
         Column(modifier = Modifier.padding(innerPadding)) {
             // 캘린더 컴포넌트
             Calendar(calendarViewModel = calendarViewModel)
@@ -77,16 +74,16 @@ fun CalendarPage(
                 if (selectedDateHabits.isEmpty()) {
                     item {
                         Text(
-                            text = "선택된 날짜에 습관이 없습니다.",
-                            style = MaterialTheme.typography.bodyMedium,
-                            modifier = Modifier.padding(16.dp)
-                        )
-                    }
+                           text = "선택된 날짜에 습관이 없습니다.",
+                          style = MaterialTheme.typography.bodyMedium,
+                           modifier = Modifier.padding(16.dp)
+                      )
+                   }
                 } else {
                     items(selectedDateHabits) { habit ->
-                        HabitCard(habit = habit)
+                       HabitCard(habit = habit)
                     }
-                }
+               }
             }
         }
     }
