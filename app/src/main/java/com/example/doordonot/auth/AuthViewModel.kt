@@ -6,12 +6,14 @@ import User
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.doordonot.model.AuthRepository
+import com.example.doordonot.model.HabitRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 class AuthViewModel(
-    private val authRepository: AuthRepository = AuthRepository()
+    private val authRepository: AuthRepository = AuthRepository(),
+    private val habitRepository: HabitRepository = HabitRepository()
 ) : ViewModel() {
 
     // UI 상태를 관리하는 StateFlow
@@ -141,6 +143,11 @@ class AuthViewModel(
 
 
     // 날짜 갱신 함수
+// auth/AuthViewModel.kt
+
+// updateDate 함수 내 사이 날짜 successDates 갱신 로직 추가
+// handleDateUpdate와 updateDate 함수 내에서 마지막 부분에 추가
+
     private fun updateDate(oldDate: String, newDate: String, mode: String) {
         val dateFormat = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
         val old = dateFormat.parse(oldDate)
@@ -158,16 +165,21 @@ class AuthViewModel(
                 println(logDate) // 각 날짜 콘솔로그로 출력
             }
 
-            // lastUpdatedDate를 newDate로 갱신
-            updateUserLastUpdatedDate(newDate)
+            // 3. 모든 습관에 대해 successDates 업데이트
+            val user = _currentUser.value ?: return
+            viewModelScope.launch {
+                // lastUpdatedDate 변경 전에 사이 날짜 success 갱신
+                habitRepository.updateAllHabitsSuccessDates(user.uid, oldDate, newDate)
+
+                // lastUpdatedDate를 newDate로 갱신
+                updateUserLastUpdatedDate(newDate)
+            }
 
             _showDateAlert.value = "반갑습니다!\n모드: $mode\n오늘날짜: $newDate\n$alertMessage"
         } else {
-            // diff <= 0인 경우는 거의 없으나 예외 처리
             _showDateAlert.value = "반갑습니다!\n모드: $mode\n오늘날짜: $newDate"
         }
     }
-
 
     // lastUpdatedDate DB 업데이트 함수
     private fun updateUserLastUpdatedDate(newDate: String) {
