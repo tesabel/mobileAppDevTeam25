@@ -1,4 +1,5 @@
-package com.example.doordonot.ui.calendar
+//CalenarViewModel.kt
+package com.example.doordonot.calendar
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -18,8 +19,8 @@ class CalendarViewModel : ViewModel() {
             month = formatter.format(Date()).split("-")[1].toInt(),
             day = formatter.format(Date()).split("-").last().toInt()
         )
-    )
-    val selectedDate: StateFlow<SelectedDate> = _selectedDate
+    )//현재 선택된 날짜(변경 O)
+    val selectedDate: StateFlow<SelectedDate> = _selectedDate//선택된 날짜 읽기 전용
 
     fun onDateSelected(year: Int, month: Int, day: Int) {
         viewModelScope.launch {
@@ -27,9 +28,3 @@ class CalendarViewModel : ViewModel() {
         }
     }
 }
-
-data class SelectedDate(
-    val year: Int,
-    val month: Int,
-    val day: Int
-)

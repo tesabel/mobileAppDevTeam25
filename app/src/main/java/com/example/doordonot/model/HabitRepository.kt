@@ -1,4 +1,4 @@
-//model/HabitRepository
+//HabitRepository
 
 package com.example.doordonot.model
 
@@ -7,6 +7,8 @@ import com.google.android.gms.tasks.Tasks
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.QuerySnapshot
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.tasks.await
+import java.time.LocalDate
 
 class HabitRepository {
     private val db = FirebaseFirestore.getInstance()
@@ -32,7 +34,8 @@ class HabitRepository {
     }
 
     // 습관 목록 가져오기
-    fun getHabits(userId: String, onResult: (List<Habit>) -> Unit) {
+    fun getHabits(userId: String,
+                  onResult: (List<Habit>) -> Unit) {
         db.collection("users")
             .document(userId)
             .collection("habits")
@@ -48,6 +51,67 @@ class HabitRepository {
             .addOnFailureListener { exception ->
                 println("HabitRepository: Failed to get habits: ${exception.message}")
                 onResult(emptyList())
+            }
+    }
+    // 모든 습관을 가져와 해당 날짜의 DailyStatus를 확인하고 HabitDisplay 리스트로 반환하도록 변경
+    fun getHabitsForDate(
+        userId: String,
+        selectedDate: String,
+        onResult: (List<HabitDisplay>) -> Unit,
+        onError: (String) -> Unit
+    ) {
+        val userRef = db.collection("users").document(userId).collection("habits")
+
+        userRef.get()
+            .addOnSuccessListener { habitsSnapshot ->
+                val habitDisplays = mutableListOf<HabitDisplay>()
+                val tasks: MutableList<com.google.android.gms.tasks.Task<*>> = mutableListOf()
+
+                for (habitDoc in habitsSnapshot.documents) {
+                    val habit = habitDoc.toObject(Habit::class.java)
+                    if (habit != null) {
+                        val dailyStatusRef = habitDoc.reference.collection("dailyStatus").document(selectedDate)
+                        val task = dailyStatusRef.get()
+                            .continueWithTask { dailyStatusTask ->
+                                val dailyStatusSnapshot = dailyStatusTask.result
+                                if (dailyStatusSnapshot != null && dailyStatusSnapshot.exists()) {
+                                    val dailyStatus = dailyStatusSnapshot.toObject(DailyStatus::class.java)
+                                    val checked = dailyStatus?.isChecked ?: false
+                                    habitDisplays.add(HabitDisplay(habit, checked))
+                                    Tasks.forResult(true)
+                                } else {
+                                    // DailyStatus 없으면 초기화
+                                    habitDoc.reference.get().continueWithTask { habitSnapshotTask ->
+                                        val fetchedHabit = habitSnapshotTask.result.toObject(Habit::class.java)
+                                        val initialStatus = if (fetchedHabit?.type == HabitType.MAINTAIN) {
+                                            DailyStatus(date = selectedDate, isChecked = true)
+                                        } else {
+                                            DailyStatus(date = selectedDate, isChecked = false)
+                                        }
+                                        dailyStatusRef.set(initialStatus).continueWith {
+                                            habitDisplays.add(HabitDisplay(habit, initialStatus.isChecked))
+                                            true
+                                        }
+                                    }
+                                }
+                            }
+                            .addOnFailureListener {
+                                println("Failed to fetch dailyStatus for habit ID: ${habit.id}")
+                            }
+                        tasks.add(task)
+                    }
+                }
+
+                Tasks.whenAllComplete(tasks)
+                    .addOnSuccessListener {
+                        onResult(habitDisplays)
+                    }
+                    .addOnFailureListener { e ->
+                        onError("Failed to fetch habits for date $selectedDate: ${e.message}")
+                    }
+            }
+            .addOnFailureListener { e ->
+                onError("Failed to fetch habits for user: ${e.message}")
             }
     }
 
@@ -74,24 +138,12 @@ class HabitRepository {
                     .addOnSuccessListener { snapshot ->
                         val streak = calculateStreak(snapshot)
                         habitRef.update("streak", streak)
-                            .addOnSuccessListener {
-                                println("HabitRepository: Streak updated to $streak")
-                                onComplete(true)
-                            }
-                            .addOnFailureListener { exception ->
-                                println("HabitRepository: Failed to update streak: ${exception.message}")
-                                onComplete(false)
-                            }
+                            .addOnSuccessListener { onComplete(true) }
+                            .addOnFailureListener { onComplete(false) }
                     }
-                    .addOnFailureListener { exception ->
-                        println("HabitRepository: Failed to get daily statuses for streak calculation: ${exception.message}")
-                        onComplete(false)
-                    }
+                    .addOnFailureListener { onComplete(false) }
             }
-            .addOnFailureListener { exception ->
-                println("HabitRepository: Failed to update DailyStatus: ${exception.message}")
-                onComplete(false)
-            }
+            .addOnFailureListener { onComplete(false) }
     }
 
     // 날짜별 습관 조회
@@ -363,7 +415,8 @@ class HabitRepository {
 
     // Helper 함수: 현재 날짜 가져오기
     private fun getCurrentDate(): String {
-        return com.example.doordonot.Config.getCurrentDate() // Config를 사용하여 날짜 결정
+        val dateFormat = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
+        return dateFormat.format(java.util.Date())
     }
 
     // 특정 날짜의 DailyStatus isChecked 값을 변경하는 함수 (트랜잭션 사용)
@@ -498,6 +551,7 @@ class HabitRepository {
         newType: String
     ): Boolean {
         return try {
+            // 예시: Firestore 업데이트
             val habitRef = db.collection("users")
                 .document(userId)
                 .collection("habits")

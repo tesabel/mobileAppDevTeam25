@@ -1,5 +1,4 @@
-//habit/HabitViewModel
-
+//HabitViewModel.kt
 package com.example.doordonot.viewmodel
 
 import android.util.Log
@@ -7,11 +6,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.doordonot.model.DailyStatus
 import com.example.doordonot.model.Habit
+import com.example.doordonot.model.HabitDisplay
 import com.example.doordonot.model.HabitRepository
 import com.example.doordonot.model.HabitType
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import java.time.LocalDate
 
 class HabitViewModel(
     private val habitRepository: HabitRepository = HabitRepository()
@@ -30,6 +31,14 @@ class HabitViewModel(
 
     private val _errorMessage = MutableStateFlow("")
     val errorMessage: StateFlow<String> = _errorMessage
+
+    // 날짜별 HabitDisplay 리스트로 관리
+    private val _selectedDateHabitDisplays = MutableStateFlow<List<HabitDisplay>>(emptyList())
+    val selectedDateHabitDisplays: StateFlow<List<HabitDisplay>> = _selectedDateHabitDisplays
+
+
+    private val _selectedDateHabits = MutableStateFlow<List<Habit>>(emptyList())
+    val selectedDateHabits: StateFlow<List<Habit>> = _selectedDateHabits
 
     // 습관 추가
     fun addHabit(habit: Habit, userId: String, onComplete: () -> Unit) {
@@ -52,7 +61,7 @@ class HabitViewModel(
         viewModelScope.launch {
             habitRepository.getHabits(userId) { habitsList ->
                 println("HabitViewModel: Loaded habits: $habitsList")
-                _habits.value = habitsList.toList()
+                _habits.value = habitsList
                 // 오늘 날짜의 DailyStatus 초기화
                 habitRepository.initializeTodayDailyStatuses(userId) { success ->
                     if (success) {
@@ -69,6 +78,22 @@ class HabitViewModel(
                 }
             }
         }
+    }
+    // 날짜별 습관 로드 시 HabitDisplay 반환
+    fun loadHabitsForDate(userId: String, selectedDate: LocalDate) {
+        val dateString = selectedDate.toString()
+        habitRepository.getHabitsForDate(
+            userId = userId,
+            selectedDate = dateString,
+            onResult = { habitDisplays ->
+                _selectedDateHabitDisplays.value = habitDisplays
+                _errorMessage.value = ""
+            },
+            onError = { errorMessage ->
+                _selectedDateHabitDisplays.value = emptyList()
+                _errorMessage.value = errorMessage
+            }
+        )
     }
 
     // 특정 습관 로드
