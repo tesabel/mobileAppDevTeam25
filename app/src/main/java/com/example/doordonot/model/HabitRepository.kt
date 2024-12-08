@@ -65,53 +65,25 @@ class HabitRepository {
         userRef.get()
             .addOnSuccessListener { habitsSnapshot ->
                 val habitDisplays = mutableListOf<HabitDisplay>()
-                val tasks: MutableList<com.google.android.gms.tasks.Task<*>> = mutableListOf()
 
+                // 모든 습관 문서 가져오기
                 for (habitDoc in habitsSnapshot.documents) {
                     val habit = habitDoc.toObject(Habit::class.java)
                     if (habit != null) {
-                        val dailyStatusRef = habitDoc.reference.collection("dailyStatus").document(selectedDate)
-                        val task = dailyStatusRef.get()
-                            .continueWithTask { dailyStatusTask ->
-                                val dailyStatusSnapshot = dailyStatusTask.result
-                                if (dailyStatusSnapshot != null && dailyStatusSnapshot.exists()) {
-                                    val dailyStatus = dailyStatusSnapshot.toObject(DailyStatus::class.java)
-                                    val checked = dailyStatus?.isChecked ?: false
-                                    habitDisplays.add(HabitDisplay(habit, checked))
-                                    Tasks.forResult(true)
-                                } else {
-                                    // DailyStatus 없으면 초기화
-                                    habitDoc.reference.get().continueWithTask { habitSnapshotTask ->
-                                        val fetchedHabit = habitSnapshotTask.result.toObject(Habit::class.java)
-                                        val initialStatus = if (fetchedHabit?.type == HabitType.MAINTAIN) {
-                                            DailyStatus(date = selectedDate, isChecked = true)
-                                        } else {
-                                            DailyStatus(date = selectedDate, isChecked = false)
-                                        }
-                                        dailyStatusRef.set(initialStatus).continueWith {
-                                            habitDisplays.add(HabitDisplay(habit, initialStatus.isChecked))
-                                            true
-                                        }
-                                    }
-                                }
-                            }
-                            .addOnFailureListener {
-                                println("Failed to fetch dailyStatus for habit ID: ${habit.id}")
-                            }
-                        tasks.add(task)
+                        // 선택된 날짜가 successDates에 포함되어 있는지 확인
+                        val isChecked = habit.successDates.contains(selectedDate)
+                        // HabitDisplay에 추가
+                        habitDisplays.add(HabitDisplay(habit = habit, isChecked = isChecked))
                     }
                 }
 
-                Tasks.whenAllComplete(tasks)
-                    .addOnSuccessListener {
-                        onResult(habitDisplays)
-                    }
-                    .addOnFailureListener { e ->
-                        onError("Failed to fetch habits for date $selectedDate: ${e.message}")
-                    }
+                // 결과 반환
+                onResult(habitDisplays)
             }
             .addOnFailureListener { e ->
-                onError("Failed to fetch habits for user: ${e.message}")
+                // 에러 처리
+                println("HabitRepository: Failed to fetch habits for user: ${e.message}")
+                onError("Failed to fetch habits for date $selectedDate: ${e.message}")
             }
     }
 
