@@ -239,7 +239,7 @@ class HabitRepository {
 
     // 오늘 날짜의 DailyStatus를 초기화하는 함수
     fun initializeTodayDailyStatuses(userId: String, onComplete: (Boolean) -> Unit) {
-        val todayDate = getCurrentDate()
+        val todayDate = com.example.doordonot.Config.getCurrentDate()
         val userHabitsRef = db.collection("users").document(userId).collection("habits")
 
         userHabitsRef.get()
@@ -302,7 +302,7 @@ class HabitRepository {
         newSuccessDates: List<String>
     ): Boolean {
         return try {
-            // successDates를 기준으로 streak 계산
+            // successDates를 기반으로 새로운 streak 계산
             val newStreak = calculateStreakFromSuccessDates(newSuccessDates)
             val newTotalSuccess = newSuccessDates.size
 
@@ -318,7 +318,7 @@ class HabitRepository {
             )
 
             habitRef.update(updates).await()
-            println("HabitRepository: updateHabitSuccessInfo succeeded. newStreak=$newStreak, newTotalSuccess=$newTotalSuccess")
+            println("HabitRepository: updateHabitSuccessInfo succeeded. 수정된 streak: $newStreak, totalSuccessCount: $newTotalSuccess")
             true
         } catch (e: Exception) {
             println("HabitRepository: updateHabitSuccessInfo failed: ${e.message}")
@@ -326,30 +326,25 @@ class HabitRepository {
         }
     }
 
-    // 2. successDates를 기반으로 streak 계산하는 로직 추가
     private fun calculateStreakFromSuccessDates(successDates: List<String>): Int {
         if (successDates.isEmpty()) return 0
 
-        // successDates를 날짜 오름차순 정렬 (yyyy-MM-dd 형식 가정)
         val sorted = successDates.sorted()
-
-        // 오늘 날짜 제외하고 어제까지 연속 성공일수 계산
-        // 예: 오늘 날짜는 Config.getCurrentDate(), 오늘 아직 체크 안했다면 streak 깨지지 않고 유지
         val currentDate = com.example.doordonot.Config.getCurrentDate()
-
-        // streak 계산: 현재날짜 이전 날부터 연속적으로 successDates에 존재하는지 확인
         val dateFormat = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
         val current = dateFormat.parse(currentDate)!!
         val calendar = java.util.Calendar.getInstance()
-
-        // 어제부터 역으로 successDates에 있는지 확인
-        // 오늘 날짜가 successDates에 없더라도 streak가 끊기는건 아님(아직 안한것)
-        // 어제를 기준으로 계속 거슬러 올라가면서 연속성 체크
-        var streakCount = 0
         calendar.time = current
+
+        // 오늘 날짜 포함 여부
+        val includesToday = sorted.contains(currentDate)
+        // 오늘 포함 시 streakCount 시작값은 1, 아닐 시 0
+        var streakCount = if (includesToday) 1 else 0
+
         // 어제로 이동
         calendar.add(java.util.Calendar.DAY_OF_YEAR, -1)
 
+        // 어제부터 거슬러 올라가며 연속 성공일수 계산
         while (true) {
             val checkDate = dateFormat.format(calendar.time)
             if (sorted.contains(checkDate)) {
@@ -359,6 +354,7 @@ class HabitRepository {
                 break
             }
         }
+
         return streakCount
     }
 
@@ -420,13 +416,6 @@ class HabitRepository {
             emptyList()
         }
     }
-
-    // Helper 함수: 현재 날짜 가져오기
-    private fun getCurrentDate(): String {
-        val dateFormat = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
-        return dateFormat.format(java.util.Date())
-    }
-
     // 특정 날짜의 DailyStatus isChecked 값을 변경하는 함수 (트랜잭션 사용)
     fun toggleDailyStatus(
         habitId: String,
