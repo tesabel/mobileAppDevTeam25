@@ -26,7 +26,6 @@ class NotificationViewModel : ViewModel() {
                 set(Calendar.HOUR_OF_DAY, 20) // 8 PM
                 set(Calendar.MINUTE, 0)
                 set(Calendar.SECOND, 0)
-                // 이미 8시가 지났다면 다음날 8시로 설정
                 if (before(Calendar.getInstance())) {
                     add(Calendar.DAY_OF_YEAR, 1)
                 }
@@ -38,9 +37,10 @@ class NotificationViewModel : ViewModel() {
                 AlarmManager.INTERVAL_DAY,
                 alarmIntent
             )
+            println("알림이 설정되었습니다. ${calendar.time}")
         } else {
-            // 알림 끄기
             alarmManager.cancel(alarmIntent)
+            println("알림이 해제되었습니다.")
         }
     }
 }
