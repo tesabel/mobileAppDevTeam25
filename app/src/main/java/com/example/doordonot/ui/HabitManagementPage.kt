@@ -1,22 +1,54 @@
-
 package com.example.doordonot.ui
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material3.*
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Divider
+import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme.typography
-import androidx.compose.runtime.*
+import androidx.compose.material3.OutlinedCard
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Snackbar
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.compositionLocalOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -34,14 +66,16 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.example.doordonot.Config.getCurrentDate
 import com.example.doordonot.R
 import com.example.doordonot.auth.AuthViewModel
 import com.example.doordonot.model.DailyStatus
-import com.example.doordonot.model.HabitType
+import com.example.doordonot.model.Habit
 import com.example.doordonot.ui.components.BottomNavigationBar
 import com.example.doordonot.ui.components.TopBar
 import com.example.doordonot.viewmodel.HabitViewModel
-import java.time.LocalDate
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @Composable
 fun HabitManagementPage(
@@ -51,6 +85,12 @@ fun HabitManagementPage(
 ) {
     val habits by habitViewModel.habits.collectAsState()
     val user by authViewModel.currentUser.collectAsState()
+
+    // 로딩 상태 및 완료 메시지 상태
+    var isLoading by remember { mutableStateOf(false) }
+    var showMessage by remember { mutableStateOf(false) }
+
+    val coroutineScope = rememberCoroutineScope()
 
     user?.let { currentUser ->
         LaunchedEffect(currentUser.uid) {
@@ -68,71 +108,124 @@ fun HabitManagementPage(
                 ) {
                     Icon(imageVector = Icons.Default.Add, contentDescription = "add")
                 }
+            },
+            snackbarHost = {
+                if (showMessage) {
+                    SnackbarHost(
+                        hostState = androidx.compose.material3.SnackbarHostState()
+                    ) {
+                        Snackbar(
+                            actionOnNewLine = false,
+                            content = {
+                                Text("수정 완료되었습니다.")
+                            }
+                        )
+                    }
+                }
             }
         ) { padding ->
-            // 형성중인 습관
-            val doList: List<com.example.doordonot.model.Habit> =
-                habits.filter { it.type.name == "FORMING" }
-            val donotList: List<com.example.doordonot.model.Habit> =
-                habits.filter { it.type.name == "MAINTAIN" }
+            val doList: List<Habit> = habits.filter { it.type.name == "FORMING" }
+            val donotList: List<Habit> = habits.filter { it.type.name == "MAINTAIN" }
 
-            // 오늘 날짜
-            val today = LocalDate.now()
+            val today = getCurrentDate()
+
             LongPressDraggable(modifier = Modifier.fillMaxSize()) {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        //.background(colorResource(id = R.color.beige))
                         .padding(padding)
                         .padding(4.dp)
                 ) {
                     Column {
-                        // 날짜 표시
                         Text(
-                            text = "${today}",
+                            text = today,
                             modifier = Modifier.padding(16.dp),
                             style = typography.headlineMedium.copy()
                         )
-
-                        // 습관 리스트 표시
                         Row {
-                            // Do list (형성 중인 습관)
-                            DropTarget<com.example.doordonot.model.Habit>(
+                            // 왼쪽 리스트(형성 중)
+                            DropTarget<Habit>(
                                 modifier = Modifier
                                     .weight(1f)
                                     .fillMaxHeight()
                                     .padding(start = 8.dp, end = 4.dp),
                                 onDrop = { habit ->
-                                    // 습관을 형성 중으로 변경
                                     habitViewModel.updateHabitType(habit.id, currentUser.uid, "MAINTAIN")
                                 }
-                            ) { isInBound, _ ->
+                            ) { _, _ ->
                                 List(
                                     modifier = Modifier.fillMaxSize(),
                                     title = "형성 중인 습관",
                                     uid = currentUser.uid,
-                                    items = doList
+                                    items = doList,
+                                    habitViewModel = habitViewModel,
+                                    onStartLoading = { isLoading = true },
+                                    onFinish = { success ->
+                                        coroutineScope.launch {
+                                            if (success) {
+                                                // 1.5초 로딩 후
+                                                delay(100)
+                                                isLoading = false
+                                                showMessage = true
+                                                // 리스트 갱신
+                                                habitViewModel.loadHabits(currentUser.uid)
+                                                // 메시지 2초 후 사라짐
+                                                delay(2000)
+                                                showMessage = false
+                                            } else {
+                                                isLoading = false
+                                                // 실패 시 별도 처리 원하면 여기에 추가
+                                            }
+                                        }
+                                    }
                                 )
                             }
 
-                            // Donot list (유지 중인 습관)
-                            DropTarget<com.example.doordonot.model.Habit>(
+                            // 오른쪽 리스트(유지 중)
+                            DropTarget<Habit>(
                                 modifier = Modifier
                                     .weight(1f)
                                     .fillMaxHeight()
                                     .padding(start = 4.dp, end = 8.dp),
                                 onDrop = { habit ->
-                                    // 습관을 유지 중으로 변경
                                     habitViewModel.updateHabitType(habit.id, currentUser.uid, "FORMING")
                                 }
-                            ) { isInBound, _ ->
+                            ) { _, _ ->
                                 List(
                                     modifier = Modifier.fillMaxSize(),
                                     title = "유지 중인 습관",
+                                    uid = currentUser.uid,
                                     items = donotList,
-                                    uid = currentUser.uid
+                                    habitViewModel = habitViewModel,
+                                    onStartLoading = { isLoading = true },
+                                    onFinish = { success ->
+                                        coroutineScope.launch {
+                                            if (success) {
+                                                delay(1500)
+                                                isLoading = false
+                                                showMessage = true
+                                                habitViewModel.loadHabits(currentUser.uid)
+                                                delay(2000)
+                                                showMessage = false
+                                            } else {
+                                                isLoading = false
+                                            }
+                                        }
+                                    }
                                 )
                             }
+                        }
+                    }
+
+                    // 로딩 화면 표시
+                    if (isLoading) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(Color(0x99000000)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator()
                         }
                     }
                 }
@@ -141,18 +234,19 @@ fun HabitManagementPage(
     }
 }
 
-// 해더 + 리스트 컬럼
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun List(
     modifier: Modifier = Modifier,
     uid: String,
     title: String,
-    items: List<com.example.doordonot.model.Habit>
+    items: List<Habit>,
+    habitViewModel: HabitViewModel,
+    onStartLoading: () -> Unit,
+    onFinish: (Boolean) -> Unit
 ) {
     Column(modifier = modifier.padding(bottom = 48.dp)) {
         LazyColumn(modifier = modifier) {
-            // 리스트 헤더
             stickyHeader {
                 Text(
                     textAlign = TextAlign.Center,
@@ -168,31 +262,42 @@ fun List(
                         .fillMaxWidth()
                 )
             }
-            // 리스트 내용
             items(items) { item ->
-                DisplayingList(habit = item, userId = uid)
+                DisplayingList(
+                    habit = item,
+                    userId = uid,
+                    habitViewModel = habitViewModel,
+                    onStartLoading = onStartLoading,
+                    onFinish = onFinish
+                )
                 Divider(modifier = Modifier.height(1.dp))
             }
         }
     }
 }
 
-// 리스트 표시
 @Composable
 fun DisplayingList(
-    habit: com.example.doordonot.model.Habit,
+    habit: Habit,
     userId: String,
+    habitViewModel: HabitViewModel,
     modifier: Modifier = Modifier,
-    viewModel: HabitViewModel = viewModel()
+    onStartLoading: () -> Unit,
+    onFinish: (Boolean) -> Unit
 ) {
-    val today = LocalDate.now().toString()
-    var isClicked by rememberSaveable { mutableStateOf(false) }
-    var isCheckedToday by rememberSaveable { mutableStateOf(habit.type == HabitType.MAINTAIN) }
+    val today = getCurrentDate()
+    // 초기화: habit.successDates에 오늘 날짜가 있으면 체크 상태로 시작
+    var isCheckedToday by rememberSaveable { mutableStateOf(habit.successDates.contains(today)) }
     var dailyStatus by remember { mutableStateOf(DailyStatus(date = today, isChecked = isCheckedToday)) }
 
+    // 만약 habit이 갱신되어 successDates가 바뀌었다면, DB 실제 상태를 반영
     LaunchedEffect(habit) {
-        isCheckedToday = habit.type == HabitType.MAINTAIN
-        dailyStatus = DailyStatus(date = today, isChecked = isCheckedToday)
+        val currentlyChecked = habit.successDates.contains(today)
+        // 현재 UI 상태와 DB 상태가 다를 경우에만 업데이트
+        if (currentlyChecked != isCheckedToday) {
+            isCheckedToday = currentlyChecked
+            dailyStatus = dailyStatus.copy(isChecked = currentlyChecked)
+        }
     }
 
     DragTarget(modifier = Modifier, dataToDrop = habit) {
@@ -201,9 +306,7 @@ fun DisplayingList(
             modifier = Modifier
                 .padding(vertical = 8.dp)
                 .fillMaxSize(),
-            colors = CardDefaults.cardColors(
-              //  colorResource(id = R.color.beige)
-            )
+            colors = CardDefaults.cardColors()
         ) {
             Row(
                 modifier = Modifier.fillMaxSize(),
@@ -216,7 +319,6 @@ fun DisplayingList(
                         .weight(1f)
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        // 카테고리 표시
                         OutlinedCard(
                             modifier = Modifier.padding(horizontal = 4.dp),
                             border = BorderStroke(
@@ -240,8 +342,7 @@ fun DisplayingList(
                         ) {
                             Text(
                                 modifier = Modifier
-                                    .padding(horizontal = 8.dp)
-                                    .padding(vertical = 2.dp),
+                                    .padding(horizontal = 8.dp, vertical = 2.dp),
                                 text = habit.category,
                                 style = typography.bodySmall
                             )
@@ -249,9 +350,8 @@ fun DisplayingList(
 
                         Text(
                             text = habit.name,
-                            maxLines = if (isClicked) 2 else 1,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.clickable { isClicked = !isClicked }
+                            maxLines = if (false) 2 else 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
 
@@ -264,35 +364,33 @@ fun DisplayingList(
                     )
                 }
 
-Column {
-                //-----------------------------체크박스 로직 -----------------------------------
-                Checkbox(
-                    checked = dailyStatus.isChecked,
-                    onCheckedChange = { isChecked ->
-                        isCheckedToday = isChecked
-                        dailyStatus = DailyStatus(date = today, isChecked = isChecked)
-                        //체크박스 선택 시 실행 함수
-                        viewModel.updateDailyStatus(habit.id, userId, dailyStatus) // DailyStatus 전달
+                Column {
+                    Checkbox(
+                        checked = dailyStatus.isChecked,
+                        onCheckedChange = { isChecked ->
+                            isCheckedToday = isChecked
+                            dailyStatus = dailyStatus.copy(isChecked = isChecked)
+                            onStartLoading()
+                            // onComplete 콜백을 활용해 UI 반영
+                            habitViewModel.updateDailyStatus(habit.id, userId, dailyStatus) { success ->
+                                onFinish(success)
+                            }
+                        }
+                    )
+
+                    IconButton(onClick = {
+                        habitViewModel.deleteHabit(habit.id, userId)
+                    }) {
+                        Icon(imageVector = Icons.Default.Delete, contentDescription = "Delete Habit")
                     }
-                )
-//---------------------------------------------------------------------
-
-
-                IconButton(onClick = {
-                    // 삭제 로직 추가
-                    viewModel.deleteHabit(habit.id, userId)
-                }) {
-                    Icon(imageVector = Icons.Default.Delete, contentDescription = "Delete Habit")
                 }
-}
             }
         }
     }
 }
 
-// ---------------------------- 드래그/드롭 함수 구현 -----------------------
+// ---------------------------- 드래그/드롭 관련 코드 -----------------------
 
-// 드래그 타겟 상태 정보
 internal class DragTargetInfo {
     var isDragging: Boolean by mutableStateOf(false)
     var dragPosition by mutableStateOf(Offset.Zero)
@@ -302,7 +400,6 @@ internal class DragTargetInfo {
     var itemSize by mutableStateOf(IntSize.Zero)
 }
 
-// 드래그 가능한 뷰의 상태만 저장
 internal val LocalDragTargetInfo = compositionLocalOf { DragTargetInfo() }
 
 @Composable
@@ -350,22 +447,16 @@ fun <T> DragTarget(
     }
 }
 
-// 드래그 개체 복사하여 드래그
 @Composable
 fun LongPressDraggable(
     modifier: Modifier = Modifier,
     content: @Composable BoxScope.() -> Unit
 ) {
     val state = remember { DragTargetInfo() }
-    CompositionLocalProvider(
-        LocalDragTargetInfo provides state
-    ) {
-        Box(
-            modifier = modifier
-        ) {
+    CompositionLocalProvider(LocalDragTargetInfo provides state) {
+        Box(modifier = modifier) {
             content()
             if (state.isDragging) {
-                // 드래그하는 동안 원래 항목 크기를 유지
                 Box(
                     modifier = Modifier
                         .size(
@@ -387,9 +478,6 @@ fun LongPressDraggable(
     }
 }
 
-// ----------------------------- 드롭 --------------------
-// 드롭 데이터 수신
-
 @Composable
 fun <T> DropTarget(
     modifier: Modifier = Modifier,
@@ -400,7 +488,7 @@ fun <T> DropTarget(
     val dragPosition = dragInfo.dragPosition
     val dragOffset = dragInfo.dragOffset
     var isCurrentDropTarget by remember { mutableStateOf(false) }
-    var isPopupVisible by remember { mutableStateOf(false) } // 팝업 상태
+    var isPopupVisible by remember { mutableStateOf(false) }
 
     Box(
         modifier = modifier
@@ -412,7 +500,6 @@ fun <T> DropTarget(
         val data = if (isCurrentDropTarget && !dragInfo.isDragging) dragInfo.dataToDrop as T? else null
         content(isCurrentDropTarget, data)
 
-        // 팝업 표시
         if (isPopupVisible) {
             AlertDialog(
                 onDismissRequest = { isPopupVisible = false },
@@ -420,8 +507,7 @@ fun <T> DropTarget(
                 text = { Text("이 습관을 이동하시겠습니까?") },
                 confirmButton = {
                     TextButton(onClick = {
-                        if (data != null)
-                            onDrop(data)
+                        if (data != null) onDrop(data)
                         dragInfo.dataToDrop = null
                         isPopupVisible = false
                     }) {
@@ -436,7 +522,6 @@ fun <T> DropTarget(
             )
         }
 
-        // 드롭이 가능하고 드래그가 끝나면 팝업을 띄움
         LaunchedEffect(isCurrentDropTarget, dragInfo.isDragging) {
             if (isCurrentDropTarget && !dragInfo.isDragging && dragInfo.dataToDrop != null) {
                 isPopupVisible = true
@@ -444,7 +529,7 @@ fun <T> DropTarget(
         }
         LaunchedEffect(dragInfo.isDragging) {
             if (!dragInfo.isDragging) {
-                dragInfo.dragOffset = Offset.Zero // dragOffset 리셋
+                dragInfo.dragOffset = Offset.Zero
             }
         }
     }

@@ -175,20 +175,26 @@ class HabitViewModel(
     }
 
     // 습관 상태 업데이트
-    fun updateDailyStatus(habitId: String, userId: String, dailyStatus: DailyStatus) {
+    fun updateDailyStatus(
+        habitId: String,
+        userId: String,
+        dailyStatus: DailyStatus,
+        onComplete: (Boolean) -> Unit
+    ) {
         viewModelScope.launch {
             habitRepository.updateDailyStatus(habitId, userId, dailyStatus) { success ->
                 if (success) {
                     println("HabitViewModel: updateDailyStatus succeeded, reloading dailyStatuses.")
-                    // 상태 업데이트 성공 시 다시 로드
                     loadDailyStatuses(habitId, userId)
                 } else {
                     println("HabitViewModel: updateDailyStatus failed.")
                     _errorMessage.value = "습관 상태 업데이트에 실패했습니다."
                 }
+                onComplete(success) // 콜백 호출
             }
         }
     }
+
 
     // 실시간 업데이트 리스너 추가 함수
     fun observeDailyStatuses(habitId: String, userId: String) {

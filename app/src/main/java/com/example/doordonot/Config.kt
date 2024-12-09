@@ -2,14 +2,15 @@
 package com.example.doordonot
 
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Date
+import java.util.Locale
 
 object Config {
     // 테스트 모드 여부를 결정하는 변수
     var useTestDate: Boolean = true
 
     // 테스트 모드에서 사용할 날짜
-    var testDate: String = "2024-11-15" // 예시값, 필요시 수정
+    var testDate: String = "2024-11-25" // 예시값, 필요시 수정
 
     // 현재 날짜를 반환하는 함수
     fun getCurrentDate(): String {
