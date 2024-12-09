@@ -13,13 +13,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -30,13 +26,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.example.doordonot.R
 import com.example.doordonot.auth.AuthViewModel
 import com.example.doordonot.model.HabitDisplay
 import com.example.doordonot.model.HabitType
@@ -63,15 +57,16 @@ fun CalendarPage(
     val currentUser by authViewModel.currentUser.collectAsState()
     Scaffold(
         topBar = { TopBar(title = "캘린더") },
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = { navController.navigate("make_habit") },
-                containerColor = colorResource(id = R.color.blue),
-                contentColor = colorResource(id = R.color.white),
-            ) {
-                Icon(Icons.Default.Add, contentDescription = "습관 추가")
-            }
-        },bottomBar = { BottomNavigationBar(navController) }
+//        floatingActionButton = {
+//            FloatingActionButton(
+//                onClick = { navController.navigate("make_habit") },
+//                containerColor = colorResource(id = R.color.blue),
+//                contentColor = colorResource(id = R.color.white),
+//            ) {
+//                Icon(Icons.Default.Add, contentDescription = "습관 추가")
+//            }
+//        },
+        bottomBar = { BottomNavigationBar(navController) }
     ) { innerPadding ->
         if (currentUser != null)
         { LaunchedEffect(selectedDate, currentUser!!.uid) {
@@ -212,7 +207,7 @@ fun HabitDisplayCard(habitDisplay: HabitDisplay) {
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        text = "오늘의 체크 상태:",
+                        text = "해당 날짜 체크 상태:",
                         style = MaterialTheme.typography.bodyMedium,
                         modifier = Modifier.padding(end = 8.dp)
                     )

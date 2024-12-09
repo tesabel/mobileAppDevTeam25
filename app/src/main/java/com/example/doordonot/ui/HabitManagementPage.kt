@@ -164,7 +164,7 @@ fun HabitManagementPage(
                                         coroutineScope.launch {
                                             if (success) {
                                                 // 1.5초 로딩 후
-                                                delay(1500)
+                                                delay(100)
                                                 isLoading = false
                                                 showMessage = true
                                                 // 리스트 갱신
