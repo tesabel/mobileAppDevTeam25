@@ -7,7 +7,7 @@ import java.util.Locale
 
 object Config {
     // 테스트 모드 여부를 결정하는 변수
-    var useTestDate: Boolean = true
+    var useTestDate: Boolean = false
 
     // 테스트 모드에서 사용할 날짜
     var testDate: String = "2024-12-09"
