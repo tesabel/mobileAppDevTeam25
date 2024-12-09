@@ -6,9 +6,11 @@ import android.util.Log
 import com.google.android.gms.tasks.Tasks
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.QuerySnapshot
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
-import kotlinx.coroutines.tasks.await
-import java.time.LocalDate
+import kotlinx.coroutines.withContext
 
 class HabitRepository {
     private val db = FirebaseFirestore.getInstance()
@@ -99,23 +101,57 @@ class HabitRepository {
             .collection("habits")
             .document(habitId)
 
+        // Step 1: update dailyStatus
         habitRef.collection("dailyStatus")
             .document(dailyStatus.date)
             .set(dailyStatus)
             .addOnSuccessListener {
                 println("HabitRepository: DailyStatus updated for date ${dailyStatus.date}")
-                habitRef.collection("dailyStatus")
-                    .orderBy("date")
-                    .get()
-                    .addOnSuccessListener { snapshot ->
-                        val streak = calculateStreak(snapshot)
-                        habitRef.update("streak", streak)
-                            .addOnSuccessListener { onComplete(true) }
-                            .addOnFailureListener { onComplete(false) }
+
+                // Step 2: Get current habit document to access successDates
+                habitRef.get()
+                    .addOnSuccessListener { habitSnapshot ->
+                        if (!habitSnapshot.exists()) {
+                            println("HabitRepository: Habit document does not exist")
+                            onComplete(false)
+                            return@addOnSuccessListener
+                        }
+
+                        // 현재 successDates 리스트를 가져옵니다.
+                        val currentSuccessDates = habitSnapshot.get("successDates") as? List<String> ?: emptyList()
+
+                        // dailyStatus.isChecked에 따라 successDates 수정
+                        val updatedSuccessDates = currentSuccessDates.toMutableList()
+                        if (dailyStatus.isChecked) {
+                            // 체크되었으면 날짜 추가 (중복 추가 방지)
+                            if (!updatedSuccessDates.contains(dailyStatus.date)) {
+                                updatedSuccessDates.add(dailyStatus.date)
+                            }
+                        } else {
+                            // 체크해제되었으면 날짜 제거
+                            updatedSuccessDates.remove(dailyStatus.date)
+                        }
+
+                        // Step 3: updateHabitSuccessInfo 호출
+                        // suspend 함수이므로 코루틴 사용 필요
+                        // 여기서는 예시로 코루틴 컨텍스트(scope)를 가지고 있다고 가정
+                        CoroutineScope(Dispatchers.IO).launch {
+                            val result = updateHabitSuccessInfo(userId, habitId, updatedSuccessDates)
+                            withContext(Dispatchers.Main) {
+                                onComplete(result)
+                            }
+                        }
                     }
-                    .addOnFailureListener { onComplete(false) }
+                    .addOnFailureListener {
+                        println("HabitRepository: Failed to get habit document. Error: ${it.message}")
+                        onComplete(false)
+                    }
+
             }
-            .addOnFailureListener { onComplete(false) }
+            .addOnFailureListener { e ->
+                println("HabitRepository: Failed to update DailyStatus. Error: ${e.message}")
+                onComplete(false)
+            }
     }
 
     // 날짜별 습관 조회
