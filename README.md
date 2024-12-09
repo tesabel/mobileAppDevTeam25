@@ -16,11 +16,14 @@ DoOrDonot은 사용자가 체계적으로 습관을 관리하고, 성취감을 �
 ## 주요 기능
 1. **회원가입 및 로그인**
    - 개인 계정을 생성하여 습관 정보를 안전하게 저장하고 관리합니다.
+![image](https://github.com/user-attachments/assets/8de28c7a-b83f-49dc-926d-d0b00768179d)
+![image](https://github.com/user-attachments/assets/45f3b78d-d973-48ad-b18e-f76bd498795b)
 
 2. **습관 저장 및 관리**
    - 새로운 습관을 추가하고, 습관 이름, 종류(Do/Donot), 목표 일수를 입력해 관리합니다.
    - 성공 일수와 연속 성공 일수를 확인할 수 있습니다.
    - 체크박스를 통해 일일 실천 여부를 기록합니다.
+![image](https://github.com/user-attachments/assets/033e6191-604e-40b4-8ca2-dd329a1a2ae2)
 
 3. **습관 전환**
    - 설정한 목표 일수를 달성하면 자동으로 **형성 중인 습관**이 **유지 중인 습관**으로 전환됩니다.
@@ -32,6 +35,12 @@ DoOrDonot은 사용자가 체계적으로 습관을 관리하고, 성취감을 �
 5. **날짜 별 습관 확인**
    - 특정 날짜에 실천한 습관 목록과 실천 여부를 확인할 수 있습니다.
    - 습관의 실천 기록을 통해 개선할 기회를 제공합니다.
+![image](https://github.com/user-attachments/assets/e8f798b1-091a-444f-b618-1caf0393f59e)
+
+6. **습관 체크 알림**
+   -앱을 사용하지 않더라도 백그라운드 알림이 매일 일정한 시간에 떠 습관을 실천하도록 돕습니다.
+   ![image](https://github.com/user-attachments/assets/8413efdc-94c0-4b7f-851f-0d8355ed2108)
+
 
 ---
 
