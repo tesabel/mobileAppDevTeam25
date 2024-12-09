@@ -34,7 +34,13 @@ fun PrivacyPolicyPage(navController: NavController) {
                 .verticalScroll(rememberScrollState())
         ) {
             Text(
-                text = "개인정보 처리방침 내용 블라블라.",
+                text = """
+                    본 앱은 사용자의 습관 데이터를 안전하게 관리하고, 더 나은 사용자 경험을 제공하기 위해 Firebase Firestore를 사용합니다.
+                    수집된 개인정보는 사용자 인증을 위한 이메일 주소 및 비밀번호, 습관 목록 및 진행 상태 등으로 구성됩니다.
+                    이러한 정보는 오직 사용자의 습관 추적 및 관리를 목적으로만 사용되며, 제3자에게는 제공되지 않습니다.
+                    데이터 보안을 위해 Firebase의 최신 보안 기술을 적용하고 있으며, 사용자는 언제든지 자신의 데이터를 조회, 수정, 삭제할 수 있습니다.
+                    본 앱은 법적 요구사항을 준수하며, 개인정보 보호에 최선을 다하고 있습니다.
+                """.trimIndent(),
                 style = MaterialTheme.typography.bodyLarge
             )
             // 실제 개인정보 처리방침 내용을 여기에 작성
