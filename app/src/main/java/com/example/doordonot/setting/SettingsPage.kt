@@ -98,13 +98,13 @@ fun SettingsPage(
             )
             Divider()
 
-            // 새로운 습관 확인 버튼 추가
-            SettingsButton(
-                text = "습관 목록 확인",
-                icon = Icons.Default.List, // 적절한 아이콘으로 변경 가능
-                onClick = { navController.navigate("habit_list") }
-            )
-            Divider()
+//            // 새로운 습관 확인 버튼 추가
+//            SettingsButton(
+//                text = "습관 목록 확인",
+//                icon = Icons.Default.List, // 적절한 아이콘으로 변경 가능
+//                onClick = { navController.navigate("habit_list") }
+//            )
+//            Divider()
         }
 
         // 로그아웃 확인 다이얼로그
