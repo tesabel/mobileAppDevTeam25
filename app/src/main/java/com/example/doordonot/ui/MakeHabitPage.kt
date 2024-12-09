@@ -2,15 +2,43 @@ package com.example.doordonot.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CheckboxDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-
 import androidx.compose.ui.zIndex
 import androidx.navigation.NavController
 import com.example.doordonot.auth.AuthViewModel
@@ -42,14 +70,14 @@ fun MakeHabitPage(
 
         var isCategoryExpanded by remember { mutableStateOf(false) }
         val categories = listOf("금지", "운동", "공부")
-        var selectedCategories by remember { mutableStateOf(setOf<String>()) }
+        var selectedCategory by remember { mutableStateOf<String?>(null) }
 
         var transitionDays by remember { mutableStateOf("") }
 
         // 확인 버튼 활성화 조건 체크
         val isForming = (selectedHabitType == "형성중인 습관")
         val isHabitNameValid = habitName.isNotBlank()
-        val isCategorySelected = selectedCategories.isNotEmpty()
+        val isCategorySelected = (selectedCategory != null)
         val isTransitionValid = if (isForming) transitionDays.isNotBlank() && transitionDays.toIntOrNull() != null else true
 
         val isConfirmEnabled = isHabitNameValid && isCategorySelected && isTransitionValid
@@ -70,7 +98,6 @@ fun MakeHabitPage(
                     placeholder = { Text("습관 이름을 입력하세요") },
                     modifier = Modifier.fillMaxWidth(),
                     colors = TextFieldDefaults.textFieldColors(
-                        // backgroundColor = Color.White,
                         focusedIndicatorColor = Color.Transparent,
                         unfocusedIndicatorColor = Color.Transparent,
                         focusedLabelColor = Color.Gray,
@@ -128,12 +155,12 @@ fun MakeHabitPage(
 
                 Spacer(modifier = Modifier.height(20.dp))
 
-                // 카테고리 분류 드롭다운
+                // 카테고리 분류 (단일 선택)
                 Text(text = "카테고리 분류", style = MaterialTheme.typography.titleMedium)
                 Spacer(modifier = Modifier.height(4.dp))
                 Box {
                     Text(
-                        text = if (selectedCategories.isEmpty()) "카테고리 선택" else selectedCategories.joinToString(", "),
+                        text = selectedCategory ?: "카테고리 선택",
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable { isCategoryExpanded = !isCategoryExpanded }
@@ -151,16 +178,16 @@ fun MakeHabitPage(
                             DropdownMenuItem(
                                 text = { Text(category) },
                                 onClick = {
-                                    if (selectedCategories.contains(category)) {
-                                        selectedCategories = selectedCategories - category
-                                    } else {
-                                        selectedCategories = selectedCategories + category
-                                    }
+                                    selectedCategory = category
+                                    isCategoryExpanded = false
                                 },
                                 leadingIcon = {
-                                    Checkbox(
-                                        checked = selectedCategories.contains(category),
-                                        onCheckedChange = null
+                                    RadioButton(
+                                        selected = (selectedCategory == category),
+                                        onClick = {
+                                            selectedCategory = category
+                                            isCategoryExpanded = false
+                                        }
                                     )
                                 }
                             )
@@ -180,7 +207,6 @@ fun MakeHabitPage(
                         placeholder = { Text("일수를 입력하세요") },
                         modifier = Modifier.fillMaxWidth(),
                         colors = TextFieldDefaults.textFieldColors(
-                            // backgroundColor = Color.White,
                             focusedIndicatorColor = Color.Transparent,
                             unfocusedIndicatorColor = Color.Transparent,
                             focusedLabelColor = Color.Gray,
@@ -195,7 +221,7 @@ fun MakeHabitPage(
                 // 확인 버튼
                 Button(
                     onClick = {
-                        val categoryString = selectedCategories.joinToString(", ")
+                        val categoryString = selectedCategory ?: ""
                         val habitType = if (isForming) HabitType.FORMING else HabitType.MAINTAIN
                         val streak = if (habitType == HabitType.MAINTAIN) 1 else 0
 
