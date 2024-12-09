@@ -1,27 +1,40 @@
-//auth/LoginPage
-
 package com.example.doordonot.auth
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.doordonot.R
 import com.example.doordonot.ui.components.TopBar
@@ -33,6 +46,17 @@ fun LoginPage(
     authViewModel: AuthViewModel
 ) {
     val showDateAlert by authViewModel.showDateAlert.collectAsState()
+    val currentUser by authViewModel.currentUser.collectAsState()
+
+    // 이미 로그인되어 있다면 로그인 페이지를 건너뛰고 바로 캘린더로 이동
+    // 단, showDateAlert가 null이 아닐 경우 알림을 먼저 띄운 후 이동
+    LaunchedEffect(currentUser) {
+        if (currentUser != null && showDateAlert == null) {
+            navController.navigate("calendar") {
+                popUpTo("login") { inclusive = true }
+            }
+        }
+    }
 
     // 로그인 성공 후 날짜알림(AlertDialog)
     if (showDateAlert != null) {
@@ -54,6 +78,13 @@ fun LoginPage(
         )
     }
 
+    // 이미 로그인된 상태라면(알림까지 떴다면) UI를 보여줄 필요 없음
+    if (currentUser != null && showDateAlert != null) {
+        // 알림이 뜰 때까지 잠깐 빈 화면 유지
+        Box(modifier = Modifier.fillMaxSize().background(colorResource(id = R.color.white))) {}
+        return
+    }
+
     Scaffold(
         topBar = { TopBar(title = "로그인") }
     ) { padding ->
@@ -70,11 +101,10 @@ fun LoginPage(
             verticalArrangement = Arrangement.Center
         ) {
             Image(
-                painter = painterResource(id = R.drawable.image02), // 이미지 파일 경로
+                painter = painterResource(id = R.drawable.image02),
                 contentDescription = "Logo",
                 modifier = Modifier
                     .fillMaxWidth()
-                  //  .padding(bottom = 8.dp)
                     .height(150.dp),
                 contentScale = ContentScale.Fit
             )
@@ -99,13 +129,12 @@ fun LoginPage(
                     keyboardType = KeyboardType.Email
                 ),
                 colors = TextFieldDefaults.textFieldColors(
-                    //backgroundColor = Color.White,
                     focusedIndicatorColor = Color.Transparent,
                     unfocusedIndicatorColor = Color.Transparent,
                     focusedLabelColor = Color.Gray,
                     unfocusedLabelColor = Color.Gray
                 ),
-                shape = RoundedCornerShape(16.dp) // 둥근 모서리
+                shape = RoundedCornerShape(16.dp)
             )
             Spacer(modifier = Modifier.height(8.dp))
 
@@ -120,13 +149,12 @@ fun LoginPage(
                 ),
                 visualTransformation = PasswordVisualTransformation(),
                 colors = TextFieldDefaults.textFieldColors(
-                   // backgroundColor = Color.White,
                     focusedIndicatorColor = Color.Transparent,
                     unfocusedIndicatorColor = Color.Transparent,
                     focusedLabelColor = Color.Gray,
                     unfocusedLabelColor = Color.Gray
                 ),
-                shape = RoundedCornerShape(16.dp) // 둥근 모서리
+                shape = RoundedCornerShape(16.dp)
             )
             Spacer(modifier = Modifier.height(8.dp))
 

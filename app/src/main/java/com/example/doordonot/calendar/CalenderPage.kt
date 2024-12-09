@@ -31,6 +31,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.example.doordonot.Config.getCurrentDate
 import com.example.doordonot.auth.AuthViewModel
 import com.example.doordonot.model.HabitDisplay
 import com.example.doordonot.model.HabitType
@@ -48,6 +49,19 @@ fun CalendarPage(
     authViewModel: AuthViewModel
 ) {
     val selectedDate by calendarViewModel.selectedDate.collectAsState()
+    LaunchedEffect(Unit) {
+        val formatter = SimpleDateFormat("yyyy-MM-dd", Locale.KOREA)
+        val initialDateStr = getCurrentDate() // 현재 날짜를 문자열로 가져오는 함수
+        val initialDate = formatter.parse(initialDateStr)
+        if (initialDate != null) {
+            val cal = java.util.Calendar.getInstance().apply { time = initialDate }
+            calendarViewModel.onDateSelected(
+                cal.get(java.util.Calendar.YEAR),
+                cal.get(java.util.Calendar.MONTH) + 1,
+                cal.get(java.util.Calendar.DAY_OF_MONTH)
+            )
+        }
+    }
 
     val selectedDateHabitDisplays by habitViewModel.selectedDateHabitDisplays.collectAsState()
     val formingHabits = selectedDateHabitDisplays.filter { it.habit.type == HabitType.FORMING }
@@ -143,8 +157,8 @@ fun CalendarPage(
                         style = MaterialTheme.typography.titleSmall,
                         modifier = Modifier.fillMaxWidth().padding(8.dp).align(Alignment.CenterHorizontally)
                             .background(
-                            Color(13, 146, 244)
-                        )
+                                Color(13, 146, 244)
+                            )
                     )
                     if (maintainHabits.isEmpty()) {
                         Text(
@@ -224,4 +238,5 @@ fun HabitDisplayCard(habitDisplay: HabitDisplay) {
         }
     }
 }
+
 

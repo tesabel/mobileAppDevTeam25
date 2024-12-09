@@ -7,19 +7,19 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.doordonot.auth.AuthViewModel
 import com.example.doordonot.auth.LoginPage
 import com.example.doordonot.auth.SignUpPage
+import com.example.doordonot.calendar.CalendarPage
+import com.example.doordonot.calendar.CalendarViewModel
+import com.example.doordonot.habit.AddHabitPage
 import com.example.doordonot.habit.HabitListScreen
 import com.example.doordonot.setting.PrivacyPolicyPage
 import com.example.doordonot.setting.SettingsPage
 import com.example.doordonot.setting.TermsOfServicePage
-import com.example.doordonot.calendar.CalendarViewModel
-import com.example.doordonot.viewmodel.HabitViewModel
-import com.example.doordonot.auth.AuthViewModel
-import com.example.doordonot.habit.AddHabitPage
-import com.example.doordonot.calendar.CalendarPage
 import com.example.doordonot.ui.HabitManagementPage
 import com.example.doordonot.ui.MakeHabitPage
+import com.example.doordonot.viewmodel.HabitViewModel
 
 @Composable
 fun NavGraph(navController: NavHostController = rememberNavController()) {

@@ -24,9 +24,17 @@ class HabitRepository {
 
         val habitWithId = habit.copy(id = habitRef.id) // 생성된 ID를 Habit 객체에 설정
 
-        habitRef.set(habitWithId)
+        // MAINTAIN 습관일 경우, 현재 날짜를 successDates에 추가
+        val updatedHabit = if (habit.type == HabitType.MAINTAIN) {
+            val currentDate = com.example.doordonot.Config.getCurrentDate()
+            habitWithId.copy(successDates = habitWithId.successDates + currentDate)
+        } else {
+            habitWithId
+        }
+
+        habitRef.set(updatedHabit)
             .addOnSuccessListener {
-                println("HabitRepository: Habit added successfully with id ${habitWithId.id}")
+                println("HabitRepository: Habit added successfully with id ${updatedHabit.id}")
                 onComplete(true)
             }
             .addOnFailureListener { exception ->
@@ -382,7 +390,7 @@ class HabitRepository {
                 // old와 new 사이 날짜 처리
                 val calendar = java.util.Calendar.getInstance()
                 calendar.time = old
-                for (i in 1 until diff) {
+                for (i in 1 until diff+1) {
                     calendar.add(java.util.Calendar.DAY_OF_YEAR, 1)
                     val intermediateDate = dateFormat.format(calendar.time)
 

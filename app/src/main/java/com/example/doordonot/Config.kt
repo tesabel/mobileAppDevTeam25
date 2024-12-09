@@ -10,8 +10,7 @@ object Config {
     var useTestDate: Boolean = true
 
     // 테스트 모드에서 사용할 날짜
-    var testDate: String = "2024-11-25" // 예시값, 필요시 수정
-
+    var testDate: String = "2024-12-09"
     // 현재 날짜를 반환하는 함수
     fun getCurrentDate(): String {
         return if (useTestDate) {
